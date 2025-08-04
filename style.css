@@ -1,3 +1,49 @@
+body {
+  margin: 0;
+  background-color: #0b0b0b;
+  color: #fff;
+  font-family: Arial, sans-serif;
+}
+
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 40px;
+  background-color: #0b0b0b;
+}
+
+.logo {
+  font-size: 1.3em;
+  font-weight: bold;
+  color: #fff;
+}
+
+.nav-links {
+  list-style: none;
+  display: flex;
+  gap: 30px;
+  margin: 0;
+  padding: 0;
+}
+
+.nav-links li a {
+  text-decoration: none;
+  color: #888;
+  font-size: 0.9em;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  transition: color 0.3s;
+}
+
+.nav-links li a:hover {
+  color: #fff;
+}
+
+main {
+  padding: 60px;
+}
+
 /* —— Parallax styles for Krowange page —— */
 
 .parallax-page {
