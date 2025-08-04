@@ -7,16 +7,8 @@
   <link rel="stylesheet" href="/style.css" />
 </head>
 <body>
-  <header class="navbar">
-    <div class="logo">Koshie Studios</div>
-    <nav>
-      <ul class="nav-links">
-        <li><a href="/pages/krowange.html">Krowange</a></li>
-        <li><a href="/pages/games.html">Games</a></li>
-        <li><a href="/pages/news.html">News</a></li>
-      </ul>
-    </nav>
-  </header>
+  <!-- Injected header -->
+  <script src="/header.js"></script>
 
   <main class="parallax-page">
     <!-- Intro text at top -->
@@ -28,13 +20,13 @@
     <!-- Parallax image layer -->
     <div class="parallax-container">
       <div class="parallax-item" data-speed="0.2">
-        <img src="https://via.placeholder.com/800x600?text=Proto+Image+1" alt="Layer 1">
+        <img src="krowange_assets/layer1.png" alt="Layer 1">
       </div>
       <div class="parallax-item" data-speed="0.5">
-        <img src="https://via.placeholder.com/600x400?text=Proto+Image+2" alt="Layer 2">
+        <img src="krowange_assets/layer2.png" alt="Layer 2">
       </div>
       <div class="parallax-item" data-speed="0.8">
-        <img src="https://via.placeholder.com/500x300?text=Proto+Image+3" alt="Layer 3">
+        <img src="krowange_assets/layer3.png" alt="Layer 3">
       </div>
     </div>
 
@@ -53,10 +45,9 @@
 
   <script>
     // Simple parallax on scroll
-    const layers = document.querySelectorAll('.parallax-item');
-    window.addEventListener('scroll', () => {
+    document.addEventListener('scroll', () => {
       const scrollY = window.pageYOffset;
-      layers.forEach(layer => {
+      document.querySelectorAll('.parallax-item').forEach(layer => {
         const speed = parseFloat(layer.dataset.speed);
         layer.style.transform = `translate(-50%, ${-scrollY * speed}px)`;
       });
