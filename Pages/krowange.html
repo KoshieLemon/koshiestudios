@@ -17,9 +17,50 @@
       </ul>
     </nav>
   </header>
-  <main>
-    <h1>Krowange</h1>
-    <p>All about the AI Guardian bot: Krowange.</p>
+
+  <main class="parallax-page">
+    <!-- Intro text at top -->
+    <section class="intro">
+      <h1>Meet Krowange</h1>
+      <p>Your ultimate AI-powered server guardian.</p>
+    </section>
+
+    <!-- Parallax image layer -->
+    <div class="parallax-container">
+      <div class="parallax-item" data-speed="0.2">
+        <img src="https://via.placeholder.com/800x600?text=Proto+Image+1" alt="Layer 1">
+      </div>
+      <div class="parallax-item" data-speed="0.5">
+        <img src="https://via.placeholder.com/600x400?text=Proto+Image+2" alt="Layer 2">
+      </div>
+      <div class="parallax-item" data-speed="0.8">
+        <img src="https://via.placeholder.com/500x300?text=Proto+Image+3" alt="Layer 3">
+      </div>
+    </div>
+
+    <!-- Content block after images -->
+    <section class="details">
+      <h2>How It Works</h2>
+      <p>
+        Krowange uses advanced NLP and moderation filters to keep your community safe—
+        automatically scanning messages, voice channels, and even images.
+      </p>
+      <p>
+        Scroll down for more features, screenshots, and usage examples.
+      </p>
+    </section>
   </main>
+
+  <script>
+    // Simple parallax on scroll
+    const layers = document.querySelectorAll('.parallax-item');
+    window.addEventListener('scroll', () => {
+      const scrollY = window.pageYOffset;
+      layers.forEach(layer => {
+        const speed = parseFloat(layer.dataset.speed);
+        layer.style.transform = `translate(-50%, ${-scrollY * speed}px)`;
+      });
+    });
+  </script>
 </body>
 </html>
