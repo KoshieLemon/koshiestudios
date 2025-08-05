@@ -4,8 +4,11 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Krowange AI - Discord Bot Setup</title>
-  <link rel="stylesheet" href="/style.css" />
+
+  <!-- now using a relative path from /krowange-page/krowange-discord/ -->
+  <link rel="stylesheet" href="../style.css" />
   <style>
+    /* keep your existing button styling */
     .button-container {
       text-align: center;
       margin-top: 2em;
@@ -25,45 +28,71 @@
     .cta-button:hover {
       background-color: #4752c4;
     }
-    /* reuse any global .intro styling from style.css */
     main.parallax-page .intro {
+      /* reuse your global intro styles */
       padding: 4em 1em;
       text-align: center;
+    }
+    /* debug panel */
+    #debug {
+      margin: 2em auto;
+      padding: 1em;
+      width: 90%;
+      max-width: 600px;
+      background: rgba(0,0,0,0.05);
+      border: 1px solid #ccc;
+      font-family: monospace;
+      white-space: pre-wrap;
     }
   </style>
 </head>
 <body>
-  <!-- Injected header -->
-  <script src="/header.js"></script>
+  <!-- Injected header (also relative) -->
+  <script src="../header.js"></script>
 
   <main class="parallax-page">
     <section class="intro">
       <h1>Welcome to Krowange AI</h1>
       <p>Start by logging in with Discord:</p>
       <div class="button-container">
-        <a id="discord-login-btn" class="cta-button" href="#">
+        <a id="discord-login-btn" class="cta-button" href="#" disabled>
           Login with Discord
         </a>
       </div>
     </section>
+    <!-- debug output -->
+    <div id="debug">Initializing...</div>
   </main>
 
   <script>
-    // build the OAuth2 invite URL once we have our client_id & redirect_uri
+    const debug = document.getElementById('debug');
+    const btn   = document.getElementById('discord-login-btn');
+
+    debug.textContent = '⏳ Fetching OAuth config...';
+
     fetch('/auth/discord/meta')
-      .then(res => res.json())
+      .then(res => {
+        debug.textContent = `🔍 Response status: ${res.status}`;
+        return res.json();
+      })
       .then(({ client_id, redirect_uri }) => {
-        const base = 'https://discord.com/oauth2/authorize';
+        debug.textContent += `\n✅ Parsed:\n  client_id: ${client_id}\n  redirect_uri: ${redirect_uri}`;
+
+        const base  = 'https://discord.com/oauth2/authorize';
         const params = new URLSearchParams({
           client_id,
           redirect_uri,
           response_type: 'code',
           scope: 'identify guilds'
         });
-        document.getElementById('discord-login-btn').href = base + '?' + params.toString();
+
+        btn.href = `${base}?${params.toString()}`;
+        btn.removeAttribute('disabled');
+        debug.textContent += `\n🔗 Button URL set.`;
       })
       .catch(err => {
-        console.error('Failed to fetch Discord OAuth config:', err);
+        console.error(err);
+        debug.textContent += `\n❌ Error fetching or parsing OAuth config:\n${err}`;
       });
   </script>
 </body>
