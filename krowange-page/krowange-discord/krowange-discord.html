@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Krowange AI - Discord Bot Setup</title>
+</head>
+<body>
+  <h1>Welcome to Krowange AI</h1>
+  <p>Start by logging in with Discord:</p>
+
+  <a id="discord-login-btn" href="#">
+    <img src="https://discord.com/assets/2c21aeda16de354ba5334551a883b481.png" alt="Login with Discord" width="200">
+  </a>
+
+  <script>
+    fetch('/auth/discord/meta')
+      .then(res => res.json())
+      .then(({ client_id, redirect_uri }) => {
+        const base = 'https://discord.com/oauth2/authorize';
+        const params = new URLSearchParams({
+          client_id,
+          redirect_uri,
+          response_type: 'code',
+          scope: 'identify guilds'
+        });
+        document.getElementById('discord-login-btn').href = `${base}?${params.toString()}`;
+      })
+      .catch(err => {
+        console.error('Failed to fetch Discord OAuth config:', err);
+      });
+  </script>
+</body>
+</html>
