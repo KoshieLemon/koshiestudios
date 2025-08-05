@@ -1,18 +1,55 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Krowange AI - Discord Bot Setup</title>
+  <link rel="stylesheet" href="/style.css" />
+  <style>
+    .button-container {
+      text-align: center;
+      margin-top: 2em;
+    }
+    .cta-button {
+      display: inline-block;
+      padding: 1em 2em;
+      background-color: #5865F2;
+      color: white;
+      font-weight: bold;
+      border: none;
+      border-radius: 8px;
+      text-decoration: none;
+      font-size: 1.1em;
+      transition: background-color 0.3s;
+    }
+    .cta-button:hover {
+      background-color: #4752c4;
+    }
+    /* reuse any global .intro styling from style.css */
+    main.parallax-page .intro {
+      padding: 4em 1em;
+      text-align: center;
+    }
+  </style>
 </head>
 <body>
-  <h1>Welcome to Krowange AI</h1>
-  <p>Start by logging in with Discord:</p>
+  <!-- Injected header -->
+  <script src="/header.js"></script>
 
-  <a id="discord-login-btn" href="#">
-    <img src="https://discord.com/assets/2c21aeda16de354ba5334551a883b481.png" alt="Login with Discord" width="200">
-  </a>
+  <main class="parallax-page">
+    <section class="intro">
+      <h1>Welcome to Krowange AI</h1>
+      <p>Start by logging in with Discord:</p>
+      <div class="button-container">
+        <a id="discord-login-btn" class="cta-button" href="#">
+          Login with Discord
+        </a>
+      </div>
+    </section>
+  </main>
 
   <script>
+    // build the OAuth2 invite URL once we have our client_id & redirect_uri
     fetch('/auth/discord/meta')
       .then(res => res.json())
       .then(({ client_id, redirect_uri }) => {
@@ -23,7 +60,7 @@
           response_type: 'code',
           scope: 'identify guilds'
         });
-        document.getElementById('discord-login-btn').href = `${base}?${params.toString()}`;
+        document.getElementById('discord-login-btn').href = base + '?' + params.toString();
       })
       .catch(err => {
         console.error('Failed to fetch Discord OAuth config:', err);
