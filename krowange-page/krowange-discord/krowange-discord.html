@@ -5,29 +5,37 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Krowange AI - Discord Bot Setup</title>
 
-  <!-- now absolute so it hits https://koshiestudios.com/style.css -->
+  <!-- absolute paths, served from your site root -->
   <link rel="stylesheet" href="/style.css" />
   <style>
     .button-container { text-align: center; margin-top: 2em; }
     .cta-button {
-      display: inline-block; padding: 1em 2em;
-      background-color: #5865F2; color: white; font-weight: bold;
-      border: none; border-radius: 8px; text-decoration: none;
-      font-size: 1.1em; transition: background-color 0.3s;
+      display: inline-block;
+      padding: 1em 2em;
+      background-color: #5865F2;
+      color: white;
+      font-weight: bold;
+      border: none;
+      border-radius: 8px;
+      text-decoration: none;
+      font-size: 1.1em;
+      transition: background-color 0.3s;
     }
     .cta-button:hover { background-color: #4752c4; }
     main.parallax-page .intro { padding: 4em 1em; text-align: center; }
     #debug {
-      margin: 2em auto; padding: 1em;
+      margin: 2em auto;
+      padding: 1em;
       width: 90%; max-width: 600px;
       background: rgba(0,0,0,0.05);
-      border: 1px solid #ccc; font-family: monospace;
+      border: 1px solid #ccc;
+      font-family: monospace;
       white-space: pre-wrap;
     }
   </style>
 </head>
 <body>
-  <!-- absolute path so it hits https://koshiestudios.com/header.js -->
+  <!-- absolute path to your site root header script -->
   <script src="/header.js"></script>
 
   <main class="parallax-page">
@@ -47,31 +55,27 @@
     const debug = document.getElementById('debug');
     const btn   = document.getElementById('discord-login-btn');
 
-    // Change this to your deployed backend URL when you're not testing locally
-    const API_BASE = 'http://localhost:3000';
+    // ←–– REPLACE this with your deployed auth server URL:
+    const API_BASE = '<AUTH_URL>'; // e.g. https://krowange-auth.up.railway.app
 
     debug.textContent = 
       `▶️ Origin: ${window.location.origin}\n` +
       `▶️ Page Path: ${window.location.pathname}\n\n`;
 
-    // HEAD-check our resources
+    // 1) Quick HEAD-check for your assets & API
     const checks = {
-      css:   '/style.css',
-      hdr:   '/header.js',
-      meta:  `${API_BASE}/auth/discord/meta`
+      css:  '/style.css',
+      hdr:  '/header.js',
+      meta: `${API_BASE}/auth/discord/meta`
     };
 
     for (const [key, url] of Object.entries(checks)) {
       fetch(url, { method: 'HEAD' })
-        .then(res => {
-          debug.textContent += `✔️ HEAD ${key}: ${url} → ${res.status}\n`;
-        })
-        .catch(err => {
-          debug.textContent += `❌ HEAD ${key}: ${url} → ${err}\n`;
-        });
+        .then(res => debug.textContent += `✔️ HEAD ${key}: ${url} → ${res.status}\n`)
+        .catch(err =>  debug.textContent += `❌ HEAD ${key}: ${url} → ${err}\n`);
     }
 
-    // after checks, fetch the OAuth meta
+    // 2) Fetch the OAuth metadata and enable the button
     setTimeout(() => {
       debug.textContent += `\n⏳ Fetching OAuth meta from ${checks.meta}\n`;
       fetch(checks.meta)
