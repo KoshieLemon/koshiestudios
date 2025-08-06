@@ -4,50 +4,29 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Krowange AI - Discord Bot Setup</title>
-
-  <!-- now using a relative path from /krowange-page/krowange-discord/ -->
+  <!-- relative path up one from krowange-page/krowange-discord/ -->
   <link rel="stylesheet" href="../style.css" />
   <style>
-    /* keep your existing button styling */
-    .button-container {
-      text-align: center;
-      margin-top: 2em;
-    }
+    .button-container { text-align: center; margin-top: 2em; }
     .cta-button {
-      display: inline-block;
-      padding: 1em 2em;
-      background-color: #5865F2;
-      color: white;
-      font-weight: bold;
-      border: none;
-      border-radius: 8px;
-      text-decoration: none;
-      font-size: 1.1em;
-      transition: background-color 0.3s;
+      display: inline-block; padding: 1em 2em;
+      background-color: #5865F2; color: white; font-weight: bold;
+      border: none; border-radius: 8px; text-decoration: none;
+      font-size: 1.1em; transition: background-color 0.3s;
     }
-    .cta-button:hover {
-      background-color: #4752c4;
-    }
-    main.parallax-page .intro {
-      /* reuse your global intro styles */
-      padding: 4em 1em;
-      text-align: center;
-    }
+    .cta-button:hover { background-color: #4752c4; }
+    main.parallax-page .intro { padding: 4em 1em; text-align: center; }
     /* debug panel */
     #debug {
-      margin: 2em auto;
-      padding: 1em;
-      width: 90%;
-      max-width: 600px;
+      margin: 2em auto; padding: 1em;
+      width: 90%; max-width: 600px;
       background: rgba(0,0,0,0.05);
-      border: 1px solid #ccc;
-      font-family: monospace;
+      border: 1px solid #ccc; font-family: monospace;
       white-space: pre-wrap;
     }
   </style>
 </head>
 <body>
-  <!-- Injected header (also relative) -->
   <script src="../header.js"></script>
 
   <main class="parallax-page">
@@ -60,40 +39,63 @@
         </a>
       </div>
     </section>
-    <!-- debug output -->
-    <div id="debug">Initializing...</div>
+
+    <div id="debug">⏳ Starting debug...</div>
   </main>
 
   <script>
     const debug = document.getElementById('debug');
     const btn   = document.getElementById('discord-login-btn');
+    const origin = window.location.origin;
+    const paths = {
+      css:   '../style.css',
+      hdr:   '../header.js',
+      meta:  `${origin}/auth/discord/meta`
+    };
 
-    debug.textContent = '⏳ Fetching OAuth config...';
+    // 1) show basic context
+    debug.textContent = 
+      `▶️ Origin: ${origin}\n` +
+      `▶️ Page Path: ${window.location.pathname}\n\n`;
 
-    fetch('/auth/discord/meta')
-      .then(res => {
-        debug.textContent = `🔍 Response status: ${res.status}`;
-        return res.json();
-      })
-      .then(({ client_id, redirect_uri }) => {
-        debug.textContent += `\n✅ Parsed:\n  client_id: ${client_id}\n  redirect_uri: ${redirect_uri}`;
-
-        const base  = 'https://discord.com/oauth2/authorize';
-        const params = new URLSearchParams({
-          client_id,
-          redirect_uri,
-          response_type: 'code',
-          scope: 'identify guilds'
+    // 2) HEAD-check each resource
+    Object.entries(paths).forEach(([key, url]) => {
+      fetch(url, { method: 'HEAD' })
+        .then(res => {
+          debug.textContent += `✔️ HEAD ${key}: ${url} → ${res.status}\n`;
+        })
+        .catch(err => {
+          debug.textContent += `❌ HEAD ${key}: ${url} → ${err}\n`;
         });
+    });
 
-        btn.href = `${base}?${params.toString()}`;
-        btn.removeAttribute('disabled');
-        debug.textContent += `\n🔗 Button URL set.`;
-      })
-      .catch(err => {
-        console.error(err);
-        debug.textContent += `\n❌ Error fetching or parsing OAuth config:\n${err}`;
-      });
+    // 3) real fetch for OAuth meta
+    setTimeout(() => {
+      debug.textContent += `\n⏳ Fetching OAuth meta...\n`;
+      fetch(paths.meta)
+        .then(res => {
+          debug.textContent += `✔️ GET meta status: ${res.status}\n`;
+          return res.json();
+        })
+        .then(({ client_id, redirect_uri }) => {
+          debug.textContent += 
+            `✔️ Parsed meta:\n   client_id: ${client_id}\n   redirect_uri: ${redirect_uri}\n`;
+
+          const base   = 'https://discord.com/oauth2/authorize';
+          const params = new URLSearchParams({
+            client_id,
+            redirect_uri,
+            response_type: 'code',
+            scope: 'identify guilds'
+          });
+          btn.href = `${base}?${params.toString()}`;
+          btn.removeAttribute('disabled');
+          debug.textContent += `✔️ Button href set → ${btn.href}\n`;
+        })
+        .catch(err => {
+          debug.textContent += `❌ Error fetching/parsing meta: ${err}\n`;
+        });
+    }, 500);
   </script>
 </body>
 </html>
