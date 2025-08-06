@@ -1,8 +1,9 @@
-const express = require('express');
-const cors    = require('cors');
-const axios   = require('axios');
+import express from 'express';
+import cors from 'cors';
+import axios from 'axios';
+import dotenv from 'dotenv';
 
-require('dotenv').config();
+dotenv.config();
 
 const app    = express();
 const port   = process.env.PORT || 3000;
@@ -10,7 +11,6 @@ const CLIENT_ID     = process.env.DISCORD_CLIENT_ID;
 const CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET;
 const REDIRECT_URI  = process.env.DISCORD_REDIRECT_URI;
 
-// allow our frontend to hit this API
 app.use(cors());
 app.use(express.json());
 
