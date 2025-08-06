@@ -4,8 +4,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Krowange AI - Discord Bot Setup</title>
-  <!-- relative path up one from krowange-page/krowange-discord/ -->
-  <link rel="stylesheet" href="../style.css" />
+
+  <!-- now absolute so it hits https://koshiestudios.com/style.css -->
+  <link rel="stylesheet" href="/style.css" />
   <style>
     .button-container { text-align: center; margin-top: 2em; }
     .cta-button {
@@ -16,7 +17,6 @@
     }
     .cta-button:hover { background-color: #4752c4; }
     main.parallax-page .intro { padding: 4em 1em; text-align: center; }
-    /* debug panel */
     #debug {
       margin: 2em auto; padding: 1em;
       width: 90%; max-width: 600px;
@@ -27,7 +27,8 @@
   </style>
 </head>
 <body>
-  <script src="../header.js"></script>
+  <!-- absolute path so it hits https://koshiestudios.com/header.js -->
+  <script src="/header.js"></script>
 
   <main class="parallax-page">
     <section class="intro">
@@ -39,27 +40,28 @@
         </a>
       </div>
     </section>
-
     <div id="debug">⏳ Starting debug...</div>
   </main>
 
   <script>
     const debug = document.getElementById('debug');
     const btn   = document.getElementById('discord-login-btn');
-    const origin = window.location.origin;
-    const paths = {
-      css:   '../style.css',
-      hdr:   '../header.js',
-      meta:  `${origin}/auth/discord/meta`
-    };
 
-    // 1) show basic context
+    // Change this to your deployed backend URL when you're not testing locally
+    const API_BASE = 'http://localhost:3000';
+
     debug.textContent = 
-      `▶️ Origin: ${origin}\n` +
+      `▶️ Origin: ${window.location.origin}\n` +
       `▶️ Page Path: ${window.location.pathname}\n\n`;
 
-    // 2) HEAD-check each resource
-    Object.entries(paths).forEach(([key, url]) => {
+    // HEAD-check our resources
+    const checks = {
+      css:   '/style.css',
+      hdr:   '/header.js',
+      meta:  `${API_BASE}/auth/discord/meta`
+    };
+
+    for (const [key, url] of Object.entries(checks)) {
       fetch(url, { method: 'HEAD' })
         .then(res => {
           debug.textContent += `✔️ HEAD ${key}: ${url} → ${res.status}\n`;
@@ -67,12 +69,12 @@
         .catch(err => {
           debug.textContent += `❌ HEAD ${key}: ${url} → ${err}\n`;
         });
-    });
+    }
 
-    // 3) real fetch for OAuth meta
+    // after checks, fetch the OAuth meta
     setTimeout(() => {
-      debug.textContent += `\n⏳ Fetching OAuth meta...\n`;
-      fetch(paths.meta)
+      debug.textContent += `\n⏳ Fetching OAuth meta from ${checks.meta}\n`;
+      fetch(checks.meta)
         .then(res => {
           debug.textContent += `✔️ GET meta status: ${res.status}\n`;
           return res.json();
@@ -88,6 +90,7 @@
             response_type: 'code',
             scope: 'identify guilds'
           });
+
           btn.href = `${base}?${params.toString()}`;
           btn.removeAttribute('disabled');
           debug.textContent += `✔️ Button href set → ${btn.href}\n`;
@@ -95,7 +98,7 @@
         .catch(err => {
           debug.textContent += `❌ Error fetching/parsing meta: ${err}\n`;
         });
-    }, 500);
+    }, 300);
   </script>
 </body>
 </html>
