@@ -3,9 +3,59 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Krowange</title>
+  <title>Krowange • Prototype</title>
   <link rel="stylesheet" href="/style.css" />
   <style>
+    body {
+      margin: 0;
+      font-family: sans-serif;
+      color: #333;
+      overflow-x: hidden;
+    }
+    header {
+      padding: 1em;
+      background: #5865F2;
+      color: white;
+      text-align: center;
+    }
+    .hero {
+      position: relative;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+    .hero img {
+      position: absolute;
+      width: 120%;
+      max-width: none;
+      top: 0;
+      left: -10%;
+    }
+    .hero h1 {
+      position: relative;
+      font-size: 3rem;
+      z-index: 1;
+    }
+    section.feature {
+      display: flex;
+      align-items: center;
+      padding: 4em 2em;
+      max-width: 1200px;
+      margin: 0 auto;
+      gap: 2em;
+    }
+    section.feature:nth-child(even) {
+      flex-direction: row-reverse;
+    }
+    .feature img {
+      width: 50%;
+      border-radius: 8px;
+    }
+    .feature .text {
+      width: 50%;
+    }
     .cta-button {
       display: inline-block;
       padding: 1em 2em;
@@ -16,15 +66,7 @@
       border-radius: 8px;
       text-decoration: none;
       font-size: 1.1em;
-      margin-top: 1.5em;
-      transition: background-color 0.3s;
-    }
-    .cta-button:hover {
-      background-color: #4752c4;
-    }
-    .button-container {
-      text-align: center;
-      margin-top: 2em;
+      margin-top: 1em;
     }
   </style>
 </head>
@@ -32,62 +74,86 @@
   <!-- Injected header -->
   <script src="/header.js"></script>
 
-  <main class="parallax-page">
-    <section class="intro">
-      <h1>Meet Krowange</h1>
-      <p>Your ultimate AI-powered server guardian.</p>
+  <header>
+    <h2>Welcome to Krowange AI</h2>
+  </header>
 
-      <div class="button-container">
-        <a
-          id="add-bot-btn"
-          class="cta-button"
-          href="https://discord.com/oauth2/authorize?client_id=1395827053928120341&scope=bot%20applications.commands&permissions=8"
-        >
-          Add to your server now
-        </a>
+  <main>
+    <!-- Hero with parallax image -->
+    <section class="hero">
+      <img class="parallax-item" src="https://via.placeholder.com/1600x900?text=Bot+Illustration" alt="Bot Illustration">
+      <h1>Meet Krowange</h1>
+    </section>
+
+    <!-- Feature blocks -->
+    <section class="feature">
+      <img src="https://via.placeholder.com/800x500?text=Moderation+Dashboard" alt="Moderation Dashboard">
+      <div class="text">
+        <h3>Real-Time Moderation</h3>
+        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer nec odio. Praesent libero.</p>
+        <a href="#" class="cta-button">Learn More</a>
       </div>
     </section>
 
-    <!-- Parallax image layer -->
-    <div class="parallax-container">
-      <div class="parallax-item" data-speed="0.2">
-        <img src="krowange-assets/layer1_krowange.png" alt="Layer 1">
+    <section class="feature">
+      <img src="https://via.placeholder.com/800x500?text=Voice+Scan" alt="Voice Scan">
+      <div class="text">
+        <h3>Voice Channel Safety</h3>
+        <p>Sed cursus ante dapibus diam. Sed nisi. Nulla quis sem at nibh elementum imperdiet.</p>
+        <a href="#" class="cta-button">Learn More</a>
       </div>
-      <div class="parallax-item" data-speed="0.5">
-        <img src="krowange-assets/layer2_krowange.png" alt="Layer 2">
-      </div>
-      <div class="parallax-item" data-speed="0.8">
-        <img src="krowange-assets/layer3_krowange.png" alt="Layer 3">
-      </div>
-    </div>
+    </section>
 
-    <section class="details">
-      <h2>How It Works</h2>
-      <p>
-        Krowange uses advanced NLP and moderation filters to keep your community safe—
-        automatically scanning messages, voice channels, and even images.
-      </p>
-      <p>
-        Scroll down for more features, screenshots, and usage examples.
-      </p>
+    <section class="feature">
+      <img src="https://via.placeholder.com/800x500?text=Image+Analysis" alt="Image Analysis">
+      <div class="text">
+        <h3>Image & Attachment AI</h3>
+        <p>Duis sagittis ipsum. Praesent mauris. Fusce nec tellus sed augue semper porta.</p>
+        <a href="#" class="cta-button">Learn More</a>
+      </div>
     </section>
   </main>
 
+  <!-- GSAP + ScrollTrigger -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
   <script>
-    // Parallax
-    document.addEventListener('scroll', () => {
-      const scrollY = window.pageYOffset;
-      document.querySelectorAll('.parallax-item').forEach(layer => {
-        const speed = parseFloat(layer.dataset.speed);
-        layer.style.transform = `translate(-50%, ${-scrollY * speed}px)`;
-      });
+    gsap.registerPlugin(ScrollTrigger);
+
+    // Parallax hero image
+    gsap.to('.hero img.parallax-item', {
+      yPercent: 30,
+      ease: 'none',
+      scrollTrigger: {
+        trigger: '.hero',
+        start: 'top top',
+        end: 'bottom top',
+        scrub: true
+      }
     });
 
-    // Debug the invite link
-    const addBtn = document.getElementById('add-bot-btn');
-    addBtn.addEventListener('click', (e) => {
-      console.log('🛠️ Add Bot button clicked, href =', addBtn.href);
-      // you can inspect this in your browser console to verify it's correct
+    // Fade-in features
+    gsap.utils.toArray('section.feature').forEach(section => {
+      gsap.from(section.querySelector('.text'), {
+        opacity: 0,
+        x: section.classList.contains('feature') ? -100 : 100,
+        duration: 1,
+        scrollTrigger: {
+          trigger: section,
+          start: 'top 80%',
+          toggleActions: 'play none none reverse'
+        }
+      });
+      gsap.from(section.querySelector('img'), {
+        opacity: 0,
+        x: section.classList.contains('feature') ? 100 : -100,
+        duration: 1,
+        scrollTrigger: {
+          trigger: section,
+          start: 'top 80%',
+          toggleActions: 'play none none reverse'
+        }
+      });
     });
   </script>
 </body>
