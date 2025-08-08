@@ -1,9 +1,20 @@
-<!-- header.html -->
-<header class="navbar">
-  <div class="logo">Koshie Studios</div>
-  <nav>
-    <ul class="nav-links">
-      <li><a href="/krowange-page/krowange.html">Krowange</a></li>
-    </ul>
+<!-- Shared header partial -->
+<header class="site-header" role="banner">
+  <!-- gradient backdrop behind the header area -->
+  <div class="header-backdrop" aria-hidden="true"></div>
+
+  <a id="logo-btn" class="brand" href="index.html">
+    <img
+      src="koshie-assets/koshiestudios_white_x1000.png"
+      alt="Koshie Studios"
+      class="brand-logo"
+    />
+    <span class="tagline">All great things start with a K</span>
+  </a>
+
+  <nav class="site-nav" role="navigation" aria-label="Primary">
+    <a href="index.html" data-route="projects">Projects</a>
+    <a href="news-page/news.html" data-route="news">News</a>
+    <a href="support-page/support.html" data-route="support">Support</a>
   </nav>
 </header>

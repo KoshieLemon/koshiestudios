@@ -1,81 +1,27 @@
-<!-- index.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Koshie Studios Experimental Nav</title>
-  <link rel="stylesheet" href="style.css">
+  <title>Koshie Studios — Projects</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div class="grid">
-    <div class="cell" data-page="cases">cases</div>
-    <div class="cell" data-page="about">about us</div>
-    <div class="cell" data-page="directions">directions</div>
-    <div class="cell" data-page="terms">terms</div>
-    <div class="cell" data-page="home">koshie</div>
-    <div class="cell" data-page="download">download</div>
-    <div class="cell" data-page="testimonials">testimonials</div>
-    <div class="cell" data-page="contacts">contacts</div>
-    <div class="cell" data-page="check">check</div>
+  <!-- Shared header -->
+  <div id="site-header"></div>
+  <script src="header.js" defer></script>
+
+  <div class="viewport">
+    <div class="camera">
+      <div class="grid-wrapper">
+        <div class="grid">
+          <div class="cell" data-page="krowange">Krowange</div>
+        </div>
+      </div>
+    </div>
+    <div id="content"></div>
   </div>
 
-  <!-- placeholder for loaded page content -->
-  <div id="content"></div>
-
-  <script>
-    const cells = document.querySelectorAll('.cell');
-    const content = document.getElementById('content');
-    let activeCell = null;
-
-    cells.forEach(cell => {
-      cell.addEventListener('click', () => {
-        if (activeCell) return; // ignore while animating
-        activeCell = cell;
-        const r = cell.getBoundingClientRect();
-        const sx = window.innerWidth  / r.width;
-        const sy = window.innerHeight / r.height;
-        const tx = -r.left;
-        const ty = -r.top;
-
-        // trigger zoom
-        cell.style.setProperty('--tx', tx + 'px');
-        cell.style.setProperty('--ty', ty + 'px');
-        cell.style.setProperty('--sx',  sx);
-        cell.style.setProperty('--sy',  sy);
-        cell.classList.add('zoom');
-
-        cell.addEventListener('transitionend', onZoomComplete, { once: true });
-        history.pushState({ page: cell.dataset.page }, '', `#${cell.dataset.page}`);
-      });
-    });
-
-    function onZoomComplete() {
-      // load your page (could be an AJAX fetch)
-      const page = activeCell.dataset.page;
-      content.innerHTML = `<button id="back">← back</button>
-                           <div class="page">${page.toUpperCase()} CONTENT</div>`;
-      content.classList.add('visible');
-      document.getElementById('back').onclick = closePage;
-    }
-
-    function closePage() {
-      content.classList.remove('visible');
-      activeCell.classList.remove('zoom');
-      activeCell = null;
-      history.pushState({}, '', window.location.pathname);
-    }
-
-    window.addEventListener('popstate', (e) => {
-      if (e.state && e.state.page && !activeCell) {
-        // user pressed forward/back: simulate cell click
-        const cell = document.querySelector(`.cell[data-page="${e.state.page}"]`);
-        if (cell) cell.click();
-      } else if (!e.state && activeCell) {
-        // handle back button
-        closePage();
-      }
-    });
-  </script>
+  <script src="script.js" defer></script>
 </body>
 </html>
