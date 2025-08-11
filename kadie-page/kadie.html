@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Kadie.ai</title>
+  <base href="/" />
+  <link rel="stylesheet" href="/style.css" />
+  <style>
+    :root{
+      --card-bg:#1a1a1e; --card-br:#2b2b31;
+      --name:#dfe3ee; --meta:#9aa0ac; --text:#e9ecf5;
+    }
+    body{ overflow:hidden; background:#000; }
+
+    /* Stage */
+    #stage{
+      position:relative; width:100vw; height:100vh;
+      display:grid; place-items:center; padding-top:82px; /* header buffer */
+      isolation:isolate;
+      background:#000;
+    }
+
+    /* ===== Parallax background stack ===== */
+    .parallax{ position:absolute; inset:0; z-index:0; pointer-events:none; overflow:hidden; }
+    .parallax .layer{
+      position:absolute; inset:0; will-change:transform, filter;
+      transform:translate3d(0,0,0) scale(var(--scale,1));
+    }
+    .parallax .layer > img{
+      width:100%; height:100%; object-fit:cover; display:block;
+    }
+    .flip{ transform:scaleX(-1); }
+
+    /* Depth styling (farther back = blurrier/darker/smaller saturation) */
+    .L1{ --scale:1.18; filter:blur(4px) brightness(.82) saturate(.95) hue-rotate(2deg); }
+    .L2{ --scale:1.12; filter:blur(3px) brightness(.86) saturate(.98) hue-rotate(4deg); }
+    .L3{ --scale:1.08; filter:blur(2.2px) brightness(.9)  saturate(1.02) hue-rotate(6deg); }
+    .L4{ --scale:1.06; filter:blur(1.6px) brightness(.94) saturate(1.06) hue-rotate(8deg); }
+    .L5{ --scale:1.03; filter:blur(1.0px) brightness(.98) saturate(1.1)  hue-rotate(10deg); }
+
+    /* Vignette to hide edges / add depth */
+    .vignette{
+      position:absolute; inset:0; z-index:1; pointer-events:none;
+      background:
+        radial-gradient(120vmax 120vmax at 50% 50%, #0000 45%, #0006 70%, #000c 85%, #000 100%),
+        linear-gradient(0deg, #0000 0%, #0000 80%, #0008 100%); /* slight floor darken */
+      mix-blend-mode:normal;
+    }
+
+    /* Kadie avatar (bigger) */
+    .center{
+      position:relative; z-index:3;
+      width:min(56vmin, 720px);     /* bigger */
+      pointer-events:none; user-select:none;
+      filter: drop-shadow(0 40px 80px #000a);
+    }
+
+    /* Message field */
+    .msgs{ position:absolute; inset:0; z-index:2; pointer-events:none; }
+
+    /* ===== Discord-style square message ===== */
+    .card{
+      position:absolute; width:320px; min-height:96px;
+      background:var(--card-bg); border:1px solid var(--card-br); border-radius:0;
+      box-shadow:0 10px 26px #0008, inset 0 0 0 1px #ffffff08;
+      padding:12px; display:grid; grid-template-columns:56px 1fr; grid-template-rows:auto auto; gap:8px 12px;
+      opacity:0; transform:translate3d(var(--tx,0),var(--ty,0),0) scale(.98);
+      transition: opacity .35s ease, transform .45s cubic-bezier(.22,1,.36,1), filter .25s;
+      will-change:transform, opacity, filter;
+    }
+    .pfp{ grid-row:1 / span 2; grid-column:1; width:56px; height:56px; border-radius:8px; object-fit:cover; background:#0d0d10; box-shadow:0 2px 10px #0006; }
+    .name{ grid-column:2; grid-row:1; color:var(--name); font-weight:700; font-size:13px; letter-spacing:.02em; }
+    .text{ grid-column:2; grid-row:2; color:var(--text); font-size:14px; line-height:1.35; }
+    .meta{ position:absolute; right:10px; bottom:8px; font-size:11px; color:var(--meta); opacity:.85; }
+
+    .card.show{ opacity:.98; transform:translate3d(var(--tx,0),var(--ty,0),0) scale(1); }
+    .card.glitch::before,.card.glitch::after{content:'';position:absolute;inset:0;mix-blend-mode:screen;pointer-events:none}
+    .card.glitch::before{background:repeating-linear-gradient(0deg,#fff1 0 2px,transparent 2px 4px);animation:scan 700ms ease-out both;opacity:.0}
+    .card.glitch::after{background:linear-gradient(90deg,#fff0 0%,#fff2 45%,#fff0 60%);filter:blur(1px);opacity:0;animation:swipe 480ms ease-out 120ms both}
+
+    @keyframes scan{0%{opacity:.0}20%{opacity:.35}100%{opacity:0}}
+    @keyframes swipe{0%{opacity:.0;transform:translateX(-40%)}50%{opacity:.25}100%{opacity:0;transform:translateX(40%)}}
+    .fade{ animation:fadeOut 320ms ease forwards }
+    @keyframes fadeOut{ to{opacity:0;filter:blur(2px);transform:translate3d(var(--tx,0),calc(var(--ty,0) + 4px),0) scale(.98)} }
+
+    @media (max-width:900px){ .card{ width:min(270px,80vw); } }
+  </style>
+</head>
+<body>
+  <!-- shared header like index -->
+  <div id="site-header"></div>
+
+  <div id="stage">
+    <!-- ===== Background stack (L1..L5) ===== -->
+    <div class="parallax" id="bg">
+      <!-- L1: far back (MOST BLUR) -->
+      <div class="layer L1" data-depth="0.22">
+        <img src="/kadie-page/page-assets/glitched_background_depth.png" alt="">
+      </div>
+      <!-- L2 -->
+      <div class="layer L2" data-depth="0.34">
+        <img src="/kadie-page/page-assets/background_static_layer2.gif" alt="">
+      </div>
+      <!-- L3 -->
+      <div class="layer L3" data-depth="0.46">
+        <img src="/kadie-page/page-assets/discord_messages_compilation_layer3.png" alt="">
+      </div>
+      <!-- L4 -->
+      <div class="layer L4" data-depth="0.58">
+        <img class="flip" src="/kadie-page/page-assets/background_static_layer2.gif" alt="">
+      </div>
+      <!-- L5: closest background -->
+      <div class="layer L5" data-depth="0.72">
+        <img src="/kadie-page/page-assets/discord_messages_compilation_layer4.png" alt="">
+      </div>
+    </div>
+
+    <!-- Vignette to hide edges & add depth -->
+    <div class="vignette" aria-hidden="true"></div>
+
+    <!-- Kadie avatar -->
+    <img class="center" id="kadie" src="/kadie-page/kadie-assets/KadieAI_Iconic_frontview.png" alt="Kadie.ai" />
+
+    <!-- Message generator overlay -->
+    <div class="msgs" id="msgs"></div>
+  </div>
+
+  <!-- header script -->
+  <script type="module" src="/header/header.js"></script>
+
+  <!-- page logic: cursor + parallax + generator with physics -->
+  <script type="module">
+    import { Cursor } from '/background/dotfield/cursor.js';
+    import { defaultConfig } from '/background/dotfield/config.js';
+
+    // Cursor like index
+    const cursor = new Cursor(defaultConfig.cursor);
+    let mouseDown = false;
+    const pointer = {x: innerWidth/2, y: innerHeight/2};
+    window.addEventListener('pointermove', e=>{ pointer.x=e.clientX; pointer.y=e.clientY; cursor.move(e.clientX, e.clientY); }, {passive:true});
+    window.addEventListener('pointerdown', ()=>{ mouseDown = true; }, {passive:true});
+    window.addEventListener('pointerup',   ()=>{ mouseDown = false; }, {passive:true});
+
+    /* -------- Stronger PARALLAX -------- */
+    const stage = document.getElementById('stage');
+    const layers = Array.from(document.querySelectorAll('.parallax .layer'));
+    function updateParallax(){
+      const r = stage.getBoundingClientRect();
+      const nx = (pointer.x - (r.left + r.width/2)) / (r.width/2);
+      const ny = (pointer.y - (r.top  + r.height/2)) / (r.height/2);
+      // strong movement; deeper layers move more
+      layers.forEach(el=>{
+        const d = Number(el.dataset.depth || 0.3);
+        const sx = -nx * 220 * d;
+        const sy = -ny * 160 * d;
+        const s  = getComputedStyle(el).getPropertyValue('--scale') || 1;
+        el.style.transform = `translate3d(${sx}px, ${sy}px, 0) scale(${s})`;
+      });
+    }
+
+    /* -------- Load text lists -------- */
+    async function getLines(url){
+      try{
+        const res = await fetch(url, {cache:'no-store'});
+        if(!res.ok) throw 0;
+        return (await res.text()).split(/\r?\n/).map(s=>s.trim()).filter(Boolean);
+      }catch{ return []; }
+    }
+    let NAMES   = await getLines('/kadie-page/data/names.txt');
+    let AVATARS = await getLines('/kadie-page/data/avatars.txt');
+    let MSGS    = await getLines('/kadie-page/data/messages.txt');
+    if(!NAMES.length){ NAMES=['zoe','mira','ion','lumi','astatine','risa','ava','kadin','nico','yuzu','sora','lyra','noa','ari','zen','kai','nori','vega']; }
+    if(!AVATARS.length){
+      AVATARS=[
+        'https://i.pravatar.cc/64?img=11','https://i.pravatar.cc/64?img=12','https://i.pravatar.cc/64?img=13',
+        'https://i.pravatar.cc/64?img=14','https://i.pravatar.cc/64?img=15','https://i.pravatar.cc/64?img=16',
+        'https://i.pravatar.cc/64?img=17','https://i.pravatar.cc/64?img=18','https://i.pravatar.cc/64?img=19',
+        'https://i.pravatar.cc/64?img=20','https://api.dicebear.com/7.x/bottts/png?seed=Alpha',
+        'https://api.dicebear.com/7.x/shapes/png?seed=Beta','https://api.dicebear.com/7.x/fun-emoji/png?seed=Gamma'
+      ];
+    }
+    if(!MSGS.length){
+      MSGS=['Context score rising…','Possible targeted mockery.','Shadow mute suggested.','Review ban appeal?','Harassment implied (subtle).','Sarcasm detected. Low risk.','Thread derailed again.','Cooldown applied (5m).','Escalate to mods?','Clean for now.','High toxicity in #general.','Spam burst detected.','Duplicate reports merged.','Auto-mod rule triggered.','False positive suspected.','User apologized; resolved.','Monitoring continues…'];
+    }
+
+    /* -------- Rectangular message generator + physics -------- */
+    const msgsHost = document.getElementById('msgs');
+    const centerImg = document.getElementById('kadie');
+
+    const pick = (arr)=> arr[(Math.random()*arr.length)|0];
+    const rand = (a,b)=> Math.random()*(b-a)+a;
+
+    // Physics nodes
+    const nodes = [];
+
+    function spawnCard(){
+      const stageRect = stage.getBoundingClientRect();
+      const avatarRect = centerImg.getBoundingClientRect();
+
+      // Rectangular spawn area: whole stage minus a safe box around avatar + margins
+      const margin = 24;
+      const safePadX = avatarRect.width * 0.55;
+      const safePadY = avatarRect.height * 0.55;
+
+      let x, y;
+      // choose one of the 4 rectangles around the avatar to distribute better
+      const area = (Math.random()*4)|0;
+      switch(area){
+        // left band
+        case 0:
+          x = rand(stageRect.left + margin, avatarRect.left - margin - 320);
+          y = rand(stageRect.top + margin, stageRect.bottom - margin - 110);
+          break;
+        // right band
+        case 1:
+          x = rand(avatarRect.right + margin, stageRect.right - margin - 320);
+          y = rand(stageRect.top + margin, stageRect.bottom - margin - 110);
+          break;
+        // top band
+        case 2:
+          x = rand(avatarRect.left - safePadX, avatarRect.right + safePadX - 320);
+          y = rand(stageRect.top + margin, avatarRect.top - margin - 110);
+          break;
+        // bottom band
+        default:
+          x = rand(avatarRect.left - safePadX, avatarRect.right + safePadX - 320);
+          y = rand(avatarRect.bottom + margin, stageRect.bottom - margin - 110);
+      }
+
+      x = Math.max(stageRect.left + margin, Math.min(x, stageRect.right - margin - 320));
+      y = Math.max(stageRect.top  + margin, Math.min(y, stageRect.bottom - margin - 110));
+
+      const name = pick(NAMES).slice(0,22);
+      const pfpURL = pick(AVATARS);
+      const msg  = pick(MSGS);
+
+      const el = document.createElement('div'); el.className='card glitch';
+      const pfp  = document.createElement('img'); pfp.className='pfp'; pfp.src=pfpURL; pfp.alt='';
+      const nm   = document.createElement('div'); nm.className='name'; nm.textContent=name;
+      const tx   = document.createElement('div'); tx.className='text'; tx.textContent=msg;
+      const meta = document.createElement('div'); meta.className='meta'; meta.textContent='#mod · now';
+      el.append(pfp,nm,tx,meta);
+      msgsHost.appendChild(el);
+
+      el.style.left = Math.round(x) + 'px';
+      el.style.top  = Math.round(y) + 'px';
+      requestAnimationFrame(()=> el.classList.add('show'));
+
+      const node = { el, ox:0, oy:0, vx: rand(-0.05,0.05), vy: rand(-0.05,0.05) };
+      nodes.push(node);
+
+      const life = rand(5200, 9200);
+      setTimeout(()=> { el.classList.add('fade'); }, life);
+      setTimeout(()=> {
+        const i = nodes.indexOf(node); if(i>=0) nodes.splice(i,1);
+        el.remove();
+      }, life+420);
+    }
+
+    function updatePhysics(dt){
+      const influence = 300;      // px
+      const pushK     = 1100;     // push force
+      const pullK     = 320;      // weaker pull
+      const drag      = 0.93;     // friction
+      const maxSpeed  = 520;      // px/s
+      const boundsPad = 12;
+
+      const stageRect = stage.getBoundingClientRect();
+
+      for(const n of nodes){
+        let ax = 0, ay = 0;
+
+        const rect = n.el.getBoundingClientRect();
+        const x = rect.left + 160 + n.ox; // ~center of 320px card
+        const y = rect.top  +  60 + n.oy;
+
+        const dx = x - pointer.x;
+        const dy = y - pointer.y;
+        const d  = Math.hypot(dx,dy) || 1;
+
+        if(d < influence){
+          const nx = dx / d, ny = dy / d;
+          const strength = (mouseDown ? -pullK : pushK) * (1 - d/influence);
+          ax += nx * strength;
+          ay += ny * strength;
+        }
+
+        // integrate
+        n.vx = (n.vx + (ax * dt)/1e6) * drag;
+        n.vy = (n.vy + (ay * dt)/1e6) * drag;
+
+        const sp = Math.hypot(n.vx, n.vy);
+        if(sp > maxSpeed){ const s = maxSpeed/sp; n.vx*=s; n.vy*=s; }
+
+        n.ox += n.vx * dt/1e3;
+        n.oy += n.vy * dt/1e3;
+
+        // keep on screen
+        const left = rect.left + n.ox, top = rect.top + n.oy;
+        if(left < stageRect.left + boundsPad) n.ox += (stageRect.left + boundsPad - left)*0.08;
+        if(top  < stageRect.top  + boundsPad) n.oy += (stageRect.top  + boundsPad - top )*0.08;
+        if(left + rect.width  > stageRect.right - boundsPad) n.ox -= (left + rect.width  - (stageRect.right - boundsPad))*0.08;
+        if(top  + rect.height > stageRect.bottom- boundsPad) n.oy -= (top  + rect.height - (stageRect.bottom- boundsPad))*0.08;
+
+        n.el.style.setProperty('--tx', `${n.ox}px`);
+        n.el.style.setProperty('--ty', `${n.oy}px`);
+      }
+    }
+
+    /* -------- Main RAF loop -------- */
+    let last = performance.now();
+    function frame(now){
+      const dt = Math.min(32, now - last);
+      last = now;
+      updateParallax();
+      updatePhysics(dt);
+      requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+
+    // spawn loop (more area; rectangular)
+    setInterval(()=>{ if(document.getElementById('msgs').children.length < 26) spawnCard(); }, 420);
+
+    // cursor hot on cards (optional)
+    document.addEventListener('pointerover', e=>{ if(e.target.closest('.card')) cursor.setHot?.(true); });
+    document.addEventListener('pointerout',  e=>{ if(e.target.closest('.card')) cursor.setHot?.(false); });
+  </script>
+</body>
+</html>

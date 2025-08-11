@@ -1,0 +1,36 @@
+/* ===== Page overlay (fades/zooms from cell) with ultra-smooth transparent edges + blur/darken ===== */
+#content {
+  position: absolute; inset: 0;
+  opacity: 0; pointer-events: none; z-index: 10;
+
+  /* zoom from cell */
+  transform: scale(var(--content-scale, 1));
+  transform-origin: var(--content-origin-x, 50%) var(--content-origin-y, 50%);
+
+  /* initial blur + slight darken -> clear & normal */
+  filter: brightness(var(--content-brightness, 1)) blur(var(--content-blur, 0px));
+
+  /* True transparent edges via multi-stop mask; Router animates --edge-size */
+  -webkit-mask-image: radial-gradient(140% 140% at 50% 50%,
+      rgba(0,0,0,1) calc(100% - var(--edge-size) - 8%),
+      rgba(0,0,0,.98) calc(100% - var(--edge-size) - 4%),
+      rgba(0,0,0,.85) calc(100% - var(--edge-size) - 2%),
+      rgba(0,0,0,0) 100%);
+          mask-image: radial-gradient(140% 140% at 50% 50%,
+      rgba(0,0,0,1) calc(100% - var(--edge-size) - 8%),
+      rgba(0,0,0,.98) calc(100% - var(--edge-size) - 4%),
+      rgba(0,0,0,.85) calc(100% - var(--edge-size) - 2%),
+      rgba(0,0,0,0) 100%);
+  -webkit-mask-size: 100% 100%;
+          mask-size: 100% 100%;
+  -webkit-mask-repeat: no-repeat;
+          mask-repeat: no-repeat;
+
+  transition:
+    transform var(--zoom-dur) var(--ease),
+    opacity   var(--zoom-dur) var(--ease),
+    filter    var(--zoom-dur) var(--ease);
+  will-change: transform, opacity, filter;
+}
+#content.visible { opacity: 1; pointer-events: auto; }
+.page-frame { width: 100%; height: 100%; border: none; }

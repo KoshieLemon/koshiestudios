@@ -1,0 +1,18 @@
+/* ===== DevTools HUD (optional) ===== */
+.devtools {
+  position: fixed; left: 12px; bottom: 12px; z-index: 1000;
+  background: rgba(20,20,20,.75);
+  border: 1px solid rgba(255,255,255,.15);
+  border-radius: 10px; padding: 10px 12px; width: 320px;
+  font-size: 12px; color: #ddd; backdrop-filter: blur(4px);
+}
+.devtools h4 { margin: 0 0 8px 0; font-size: 12px; color: #fff; }
+.devtools .row { display: grid; grid-template-columns: 110px 1fr 48px; align-items: center; gap: 8px; margin: 6px 0; }
+.devtools .row input[type="range"] { width: 100%; }
+.devtools .stats { display: grid; grid-template-columns: repeat(3,1fr); gap: 6px; margin-top: 8px; }
+.devtools .badge { padding: 3px 6px; border: 1px solid rgba(255,255,255,.2); border-radius: 6px; text-align: center; }
+.devtools .ok { color: #8dff8d; border-color: rgba(141,255,141,.35); }
+.devtools .warn { color: #ffd18d; border-color: rgba(255,209,141,.35); }
+.devtools .btns { display: flex; gap: 6px; margin-top: 8px; }
+.devtools button { background:#222; color:#fff; border:1px solid rgba(255,255,255,.2); border-radius:8px; padding:6px 8px; cursor:pointer; }
+.devtools button:hover { background:#2a2a2a; }

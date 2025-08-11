@@ -1,0 +1,21 @@
+/* Custom cursor circle */
+.cursor {
+  position: fixed;
+  left: 0; top: 0;
+  width: 22px; height: 22px;
+  margin-left: -11px; /* center on pointer */
+  margin-top: -11px;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 9999;
+  background: radial-gradient(circle at 50% 50%, rgba(255,255,255,.45), rgba(255,255,255,.06) 70%, rgba(255,255,255,0) 72%);
+  mix-blend-mode: screen;
+  transform: translate3d(0,0,0);
+  transition: transform .08s linear, opacity .2s ease;
+  opacity: .9;
+}
+
+.cursor.is-pointer {
+  background: radial-gradient(circle at 50% 50%, rgba(255,255,255,.95), rgba(255,255,255,.16) 70%, rgba(255,255,255,0) 72%);
+  filter: drop-shadow(0 0 8px rgba(255,255,255,.35));
+}
