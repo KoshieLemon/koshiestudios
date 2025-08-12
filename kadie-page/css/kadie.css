@@ -1,0 +1,108 @@
+/* Base */
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:#000;color:#fff;font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial;overflow:hidden}
+header,.site-header,.global-header{position:relative;z-index:9999}
+
+/* Stage */
+.void-stage{position:relative;width:100vw;height:100vh;overflow:hidden}
+.scene{position:absolute;inset:0;transform-style:preserve-3d;perspective:1000px;isolation:isolate}
+
+/* Slight blue haze so it never looks pitch black while loading */
+.scene::before{
+  content:"";position:absolute;inset:-12%;z-index:7000;pointer-events:none;
+  background:
+    radial-gradient(60% 50% at 50% 45%, rgba(60,120,255,.22), rgba(0,0,0,0) 60%),
+    radial-gradient(70% 60% at 40% 60%, rgba(50,90,220,.16), rgba(0,0,0,0) 65%);
+  filter:blur(30px) saturate(1.3); mix-blend-mode:screen; opacity:.55;
+}
+
+/* Kadie */
+.kadie-wrap{
+  position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
+  width:min(88vmin, 1100px);
+  z-index:8000;
+  filter:drop-shadow(0 30px 54px rgba(0,0,0,.65));
+}
+.kadie{
+  width:100%; height:auto; display:block;
+  opacity:.48;
+  filter: brightness(.85) contrast(.9) saturate(.9);
+  -webkit-mask-image: radial-gradient( 75% 68% at 50% 46%, #fff 52%, rgba(255,255,255,0) 95% );
+          mask-image: radial-gradient( 75% 68% at 50% 46%, #fff 52%, rgba(255,255,255,0) 95% );
+  -webkit-mask-repeat:no-repeat; mask-repeat:no-repeat;
+  -webkit-mask-position:center; mask-position:center;
+  -webkit-mask-size:100% 100%; mask-size:100% 100%;
+}
+
+/* Eyes (bright) */
+.kadie-eye{
+  position:absolute; transform:translate(-50%,-50%); pointer-events:none;
+  z-index:8061;
+  filter: drop-shadow(0 0 20px rgba(160,200,255,1)) drop-shadow(0 0 48px rgba(100,170,255,.85)) drop-shadow(0 0 96px rgba(80,140,255,.70));
+  animation: eyesPulse 2.2s ease-in-out infinite;
+}
+@keyframes eyesPulse{
+  0%,100%{ filter:drop-shadow(0 0 16px rgba(160,200,255,.95)) drop-shadow(0 0 40px rgba(110,180,255,.75)) drop-shadow(0 0 86px rgba(90,150,255,.60)) }
+  50%    { filter:drop-shadow(0 0 26px rgba(190,220,255,1))  drop-shadow(0 0 72px rgba(140,200,255,.95)) drop-shadow(0 0 140px rgba(110,180,255,.85)) }
+}
+.eye-left {  left:var(--eyeL-left,41.5%); top:var(--eyeL-top,41.2%);   width:var(--eyeL-width,21.0%); }
+.eye-right{  left:var(--eyeR-left,58.5%); top:var(--eyeR-top,41.2%);   width:var(--eyeR-width,21.0%); }
+
+/* Hair (plain; same layer as eyes; wave OFF) */
+.hair-group{ position:absolute; left:0; top:0; width:0; height:0; pointer-events:none; z-index:8060 }
+.kadie-hair{
+  position:absolute; transform:translate(-50%,-50%); width:auto; height:auto; display:block;
+  pointer-events:none; opacity:1; filter:none; animation:none;
+}
+.hair-01{ left:var(--hair1-left,36%); top:var(--hair1-top,54%); width:var(--hair1-width,36%); transform-origin: 42% 14%; }
+.hair-02{ left:var(--hair2-left,64%); top:var(--hair2-top,54%); width:var(--hair2-width,36%); transform-origin: 58% 14%; }
+
+/* Message/line layers (under Kadie) */
+.message-layer{position:absolute;inset:0;pointer-events:none}
+.message-layer.back{  z-index:7001 }
+.message-layer.mid{   z-index:7101 }
+.message-layer.front{ z-index:7201 }
+.line-layer{position:absolute;inset:0;pointer-events:none}
+.line-layer.back{  z-index:7002 }
+.line-layer.mid{   z-index:7102 }
+.line-layer.front{ z-index:7202 }
+
+/* OVER band (above Kadie) */
+.message-layer.over{ z-index:8200 }
+.line-layer.over{    z-index:8201 }
+
+/* FX layers (between bands) */
+.fx-layer{position:absolute;inset:-6%;pointer-events:none;z-index:7050}
+.fx-midfront{z-index:7150}
+.fxv{
+  position:absolute; inset:0; width:100%; height:100%; object-fit:cover;
+  opacity:0; mix-blend-mode:screen;
+  filter:brightness(1.15) contrast(1.35) saturate(1.2) hue-rotate(210deg);
+  transition:opacity .35s ease;
+}
+.fxv.lighten{ mix-blend-mode:lighten }
+.fxv.ready{ opacity:.55 }              /* normal reveal */
+.fxv.ready-fallback{ opacity:.25 }     /* safety fallback so it’s never pure black */
+.fx-noise{
+  position:absolute; inset:-10%;
+  background:repeating-linear-gradient(0deg, rgba(160,200,255,.05) 0 1px, transparent 2px 4px);
+  mix-blend-mode:screen; opacity:.25
+}
+
+/* Discord cards */
+.dmsg{position:absolute;max-width:min(54rem,52vw);background:#1f2230;border-radius:0;padding:14px 16px 16px 16px;box-shadow:0 18px 42px rgba(0,0,0,.5);filter:url(#cardWarp) contrast(1.05) saturate(1.05);overflow:hidden;opacity:.98;transform:translateZ(0)}
+.drow{display:flex;gap:16px}
+.pfp{position:relative;width:52px;height:52px;border-radius:50%;background:#3358ff;flex:0 0 52px}
+.pfp .ini{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-weight:900;color:#fff;font-size:15px}
+.dcontent{flex:1 1 auto}
+.dhead{display:flex;gap:10px;align-items:baseline}
+.dname{font-weight:900;color:#e3e9ff;font-size:1.08rem}
+.dtime{color:#9bb0d6;font-size:.94rem}
+.dtext{margin-top:6px;line-height:1.45;color:#d6e1ff;font-size:1.08rem;word-wrap:break-word;position:relative;overflow:hidden}
+.char-placeholder{display:inline-block;opacity:0}
+.flowchar{position:absolute;left:0;top:0;white-space:pre;pointer-events:none}
+
+/* Global overlays */
+.scanlines{position:absolute;inset:0;z-index:7600;pointer-events:none;background:linear-gradient(rgba(255,255,255,.05),rgba(255,255,255,0)),repeating-linear-gradient(0deg,rgba(160,200,255,.06) 0 1px,rgba(0,0,0,0) 2px 4px);mix-blend-mode:overlay;opacity:.28}
+.vignette-soft{position:absolute;inset:0;z-index:7700;pointer-events:none;opacity:.35;background:radial-gradient(80% 70% at 50% 50%, rgba(0,0,0,0) 55%, rgba(0,0,0,0.35) 100%)}

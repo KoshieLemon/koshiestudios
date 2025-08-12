@@ -1,99 +1,97 @@
 // header/header.js
-// Ensures the brand button/link always works across all pages,
-// while letting the portal cancel (on the index transition) still function.
+// Injects the shared header markup (inlined) and ensures it stays clickable above overlays.
+// Side-effect module only; safe to include from any page.
 
 (function () {
-  // Wait for DOM
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init, { once: true });
-  } else {
-    init();
+  function onReady(fn) {
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', fn, { once: true });
+    } else {
+      fn();
+    }
   }
 
-  function init() {
-    // If your project already injects header markup elsewhere, we don't touch it.
-    // We just make the brand reliably clickable and ensure header sits on top.
-    const headerEl = document.querySelector('#site-header') || document.querySelector('header');
+  const HEADER_HTML = `
+<div class="site-header">
+  <div class="header-backdrop"></div>
+  <a id="logo-btn" class="brand" href="/">
+    <img id="logo-img" class="brand-logo" src="/site-assets/koshiestudios_white_x1000.png" alt="Koshie Studios" />
+    <span class="tagline">Koshie Studios</span>
+  </a>
+</div>
+<style>
+  #site-header { position: relative; z-index: 10001; }
+  .site-header {
+    position: fixed; top: 0; left: 0; width: 100%; height: 82px;
+    display: flex; align-items: center; gap: 20px; padding: 0 24px;
+    pointer-events: auto;
+  }
+  .header-backdrop {
+    position: fixed; left: 0; top: 0; width: 100%; height: 18vh;
+    background: linear-gradient(
+      to top,
+      rgba(0,0,0,0) 0%,
+      rgba(15,17,16,0.65) 45%,
+      #0f1110 100%
+    );
+    z-index: -1; pointer-events: none;
+  }
+  .brand { display: inline-flex; align-items: center; gap: 14px; color: #fff; text-decoration: none; }
+  .brand-logo { width: 160px; height: auto; display: block; }
+  .tagline { font-size: 14px; opacity: .9; white-space: nowrap; }
+</style>
+`;
 
-    // Raise header above any page overlays and make sure it's clickable
-    if (headerEl) {
-      const style = headerEl.style;
-      if (!getComputedStyle(headerEl).position || getComputedStyle(headerEl).position === 'static') {
-        style.position = 'fixed'; // stays consistent like your home page
-        style.top = '0';
-        style.left = '0';
-        style.right = '0';
-      }
-      style.zIndex = '10000';
-      style.pointerEvents = 'auto';
+  function ensureHost() {
+    let host = document.querySelector('#site-header');
+    if (!host) {
+      host = document.createElement('div');
+      host.id = 'site-header';
+      document.body.prepend(host);
     }
+    // Force on top
+    host.style.position = host.style.position || 'relative';
+    host.style.zIndex = host.style.zIndex || '10001';
+    host.style.pointerEvents = host.style.pointerEvents || 'auto';
+    return host;
+  }
 
-    // Find all possible "brand home" elements
-    const brandCandidates = Array.from(document.querySelectorAll(
-      '.brand a, .brand button, header .brand a, #brand-home, [data-brand-home]'
-    ));
+  function wireBrand(host) {
+    const brand = host.querySelector('#logo-btn') || host.querySelector('.brand');
+    if (!brand) return;
+    brand.setAttribute('href', '/');
+    brand.addEventListener('click', (e) => {
+      e.preventDefault();
+      window.location.assign('/');
+    }, { passive: false });
+  }
 
-    if (!brandCandidates.length) return;
-
-    // Normalize each brand element to navigate home
-    brandCandidates.forEach((el) => {
-      // If it's an <a>, make sure it actually has an href
-      if (el.tagName === 'A' && !el.getAttribute('href')) {
-        el.setAttribute('href', '/');
-      }
-
-      // Kill any rogue handlers that might block navigation (capture-phase)
-      el.addEventListener('click', (e) => {
-        // If a portal is open (during index transition), let Router handle cancel.
-        const portalOpen = !!document.querySelector('.portal');
-        if (portalOpen) return; // do not hijack; Router's cancel should run
-
-        // Hard navigate home on brand click
-        e.preventDefault();
-        e.stopImmediatePropagation();
-        try {
-          // Prefer assign to keep history behavior explicit
-          window.location.assign('/');
-        } catch {
-          window.location.href = '/';
-        }
-      }, { capture: true });
-
-      // Keyboard accessibility
-      el.addEventListener('keydown', (e) => {
-        const isButtony = el.tagName !== 'A';
-        const activate = (e.key === 'Enter') || (isButtony && e.key === ' ');
-        if (!activate) return;
-        const portalOpen = !!document.querySelector('.portal');
-        if (portalOpen) return;
-        e.preventDefault();
-        e.stopImmediatePropagation();
-        try { window.location.assign('/'); } catch { window.location.href = '/'; }
-      }, { capture: true });
-
-      // Treat non-anchors like links for a11y
-      if (el.tagName !== 'A') {
-        el.setAttribute('role', 'link');
-        el.setAttribute('tabindex', '0');
-        el.setAttribute('aria-label', 'Go to Koshie Studios home');
+  function keepHeaderClickable() {
+    const layers = document.querySelectorAll('.portal, .parallax, .vignette, .msgs, .overlay, .content-overlay');
+    layers.forEach((lay) => {
+      const cs = getComputedStyle(lay);
+      const z = Number(cs.zIndex || 0);
+      if (z >= 10001) lay.style.zIndex = '10000';
+      if ((cs.position === 'fixed' || cs.position === 'absolute') && cs.top === '0px') {
+        lay.style.pointerEvents = 'none';
       }
     });
-
-    // Defensive: ensure page overlays never block header clicks
-    // (Your Kadie layers already use pointer-events:none, but just in case other pages change)
-    const unblockHeader = () => {
-      document.querySelectorAll('.portal, .parallax, .vignette, .msgs').forEach((lay) => {
-        // Only adjust if they are above header and intercepting
-        const z = Number(getComputedStyle(lay).zIndex || 0);
-        if (z >= 10000) lay.style.zIndex = (10000 - 1).toString();
-        if (getComputedStyle(lay).pointerEvents !== 'none') {
-          lay.style.pointerEvents = 'none';
-        }
-      });
-    };
-    unblockHeader();
-    // Run again later if other scripts add overlays
-    setTimeout(unblockHeader, 0);
-    setTimeout(unblockHeader, 500);
   }
+
+  onReady(() => {
+    const host = ensureHost();
+    host.innerHTML = HEADER_HTML;
+
+    // Re-apply styles if needed
+    host.querySelectorAll('style').forEach((styleEl) => {
+      const clone = styleEl.cloneNode(true);
+      styleEl.replaceWith(clone);
+    });
+
+    wireBrand(host);
+    keepHeaderClickable();
+    setTimeout(keepHeaderClickable, 0);
+    setTimeout(keepHeaderClickable, 500);
+    console.log('[header] injected');
+  });
 })();

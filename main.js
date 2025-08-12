@@ -2,7 +2,19 @@
 // This makes coming back behave exactly like loading http://localhost:8099/ (your “works every time” path).
 
 import { qs } from './core/dom.js';
-import { headerReady } from './header/header.js';
+
+// 1) side-effect import (no named exports from header.js)
+import './header/header.js';
+
+// 2) provide a local headerReady Promise for the await below
+const headerReady = new Promise((resolve) => {
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', resolve, { once: true });
+  } else {
+    resolve();
+  }
+});
+
 import { CanvasController } from './canvas/CanvasController.js';
 import { DragController } from './drag/DragController.js';
 import { Router } from './content/Router.js';
