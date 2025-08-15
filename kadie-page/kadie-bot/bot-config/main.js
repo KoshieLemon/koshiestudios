@@ -111,9 +111,7 @@ function wireCanvasDnd(){
         id: meta.id, name: meta.name, at: pt, enabled: state.editorEnabled, sys: state.currentSystemId
       });
 
-      // Call existing API. Most implementations accept an optional position arg.
-      // Passing extra args is harmless if ignored.
-      addNodeFromElement(meta, { x: pt.x, y: pt.y });
+      addNodeFromElement(meta, pt.x, pt.y);
 
     } catch (err) {
       // Keep silent failure out of the way of other systems
@@ -133,32 +131,34 @@ function clientToCanvasPoint(canvasEl, clientX, clientY){
   const cs = getComputedStyle(content);
   const m = cs.transform;
 
+  const x = clientX - rect.left;
+  const y = clientY - rect.top;
+
   // Identity
   if (!m || m === 'none') {
-    return { x: clientX - rect.left, y: clientY - rect.top };
+    return { x, y };
   }
 
-  // matrix(a, b, c, d, e, f)
-  let a=1, b=0, c=0, d=1, e=0, f=0;
+  // matrix(a, b, c, d, e, f) matrix(a, b, c, d, e, f) – translation (e,f) already in rect, so ignore
+  let a=1, b=0, c=0, d=1;
   try {
     const parts = m.match(/matrix\(([-\d.,\s]+)\)/i);
     if (parts && parts[1]) {
       const vals = parts[1].split(',').map(v => parseFloat(v.trim()));
-      if (vals.length >= 6) [a,b,c,d,e,f] = vals;
+      if (vals.length >= 4) [a,b,c,d] = vals;
     }
   } catch {}
 
-  const x = clientX - rect.left;
-  const y = clientY - rect.top;
-
   // Invert 2D affine (ignoring shear off-diagonals is unsafe; do full inverse)
   const det = (a * d - b * c) || 1;
-  const invA =  d / det, invB = -b / det, invC = -c / det, invD =  a / det;
-  const invE = (c * f - d * e) / det, invF = (b * e - a * f) / det;
+  const invA =  d / det;
+  const invB = -b / det;
+  const invC = -c / det;
+  const invD =  a / det;
 
   return {
-    x: invA * x + invC * y + invE,
-    y: invB * x + invD * y + invF
+    x: invA * x + invC * y,
+    y: invB * x + invD * y
   };
 }
 

@@ -1,7 +1,6 @@
 // canvas/index.js — viewport wiring, render, spawn, non-overlap, and legacy APIs.
 import { dom } from "./env.js";
 import { applyTransform, buildDom, wirePanZoom, wireDeleteKey, centerOnGraph } from "./view.js";
-import { wireDropAdd } from "./dnd.js";
 import { state, markDirty, historyPush } from "../state.js";
 import { createNodeEl, ensureNodeDefaults } from "./nodes.js";
 import { createEdgeEl } from "./edges.js";
@@ -23,9 +22,6 @@ export function renderAll(){
   applyTransform();
   wirePanZoom();
   wireDeleteKey();
-
-  // DnD target on the viewport
-  wireDropAdd(dom.vp);
 
   renderGraph();
   centerOnGraph();

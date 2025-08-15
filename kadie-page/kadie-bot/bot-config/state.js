@@ -92,8 +92,10 @@ window.addEventListener("keydown", (e)=>{
 // ---------- System / Guild selection ----------
 export function setEditorEnabled(v){
   state.editorEnabled = !!v;
-  const el = document.getElementById('canvas');
-  if (el) el.classList.toggle('disabled', !state.editorEnabled);
+  const canvas = document.getElementById('canvas');
+  const sidebar = document.getElementById('sidebar');
+  if (canvas) canvas.classList.toggle('disabled', !state.editorEnabled);
+  if (sidebar) sidebar.classList.toggle('disabled', !state.editorEnabled);
   window.dispatchEvent(new CustomEvent("bp:editor-enabled", { detail:{ enabled: state.editorEnabled }}));
 }
 

@@ -122,6 +122,13 @@
       position:absolute; inset:auto 20px 20px 20px; display:block; text-align:center; color:var(--muted); font-size:14px;
     }
 
+    .sidebar.disabled { opacity:.5; filter:grayscale(.5); position:relative; }
+    .sidebar.disabled * { pointer-events:none; }
+    .sidebar.disabled::after{
+      content:"Select or create a system to start editing";
+      position:absolute; inset:0; display:flex; align-items:center; justify-content:center; text-align:center; color:var(--muted); font-size:14px; padding:20px;
+    }
+
     .ctx{ position:absolute; z-index:9999; display:none; min-width:160px; background:#0f1320; border:1px solid var(--brd); border-radius:10px; box-shadow:0 10px 26px rgba(0,0,0,.35); }
     .ctx.show{ display:block; }
     .ctx button{ width:100%; text-align:left; background:transparent; color:var(--text); border:0; padding:8px 10px; cursor:pointer; }
