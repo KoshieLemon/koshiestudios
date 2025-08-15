@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Kadie Bot — Select a server</title>
+  <base href="/" />
+  <link rel="stylesheet" href="/styles/base.css" />
+  <link rel="stylesheet" href="/styles/header.css" />
+  <style>
+    :root{
+      --card-bg: rgba(18,20,28,0.72);
+      --card-brd: rgba(255,255,255,0.08);
+      --card-brd-h: rgba(142,161,255,0.35);
+      --text: #e9ecff;
+      --muted: rgba(233,236,255,0.7);
+      --accent: #8ea1ff;
+      --good: #c3f1d9;
+      --warn: #ffd9a8;
+    }
+    /* keep a visible mouse even before your custom cursor attaches */
+    html, body, main, .page { cursor: auto !important; }
+
+    html, body { height: 100%; background: #0b0e14; color: var(--text); }
+    body { margin: 0; }
+
+    .wrap { min-height: 100svh; display: grid; grid-template-rows: auto 1fr; }
+
+    /* clear the global header; center content vertically */
+    .page {
+      width: min(1100px, 92vw);
+      margin: 120px auto 64px;
+      display: grid;
+      grid-template-rows: auto auto auto 1fr;
+      align-content: start;
+      justify-items: center;
+      text-align: center;
+    }
+
+    h1 { font-size: clamp(22px, 3.6vw, 34px); margin: 8px 0 8px; letter-spacing: 0.2px; }
+    .sub { color: var(--muted); margin-bottom: 24px; font-size: 15px; }
+
+    .notice {
+      display:flex; align-items:center; justify-content:space-between; gap:12px;
+      padding: 12px 14px; border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.14); background: rgba(26,30,44,0.7);
+      margin-bottom: 18px; width: 100%; max-width: 820px;
+    }
+    .notice .left { display:flex; align-items:center; gap:10px; }
+    .notice .title { font-weight:600; }
+    .notice .muted { color: var(--muted); font-size: 13px; }
+
+    .btn {
+      padding: 10px 14px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.14);
+      background: rgba(26,30,44,0.7); color: var(--text); cursor: pointer;
+    }
+    .btn:hover { border-color: var(--card-brd-h); }
+    .btn.good { border-color: rgba(86,196,132,0.38); color: var(--good); }
+
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; width: 100%; }
+
+    .card {
+      display: grid; grid-template-columns: 56px 1fr auto; align-items: center; gap: 14px;
+      padding: 14px; background: var(--card-bg); border: 1px solid var(--card-brd);
+      border-radius: 16px; box-shadow: 0 10px 26px rgba(0,0,0,0.35), inset 0 0 0 1px rgba(255,255,255,0.03);
+      transition: border-color .15s ease, transform .08s ease, opacity .15s ease;
+    }
+    .card:not([data-disabled="true"]) { cursor: pointer; }
+    .card:hover { border-color: var(--card-brd-h); transform: translateY(-1px); }
+    .card[data-disabled="true"] { opacity: .6; filter: grayscale(.4); cursor: not-allowed; }
+
+    .avatar {
+      width: 56px; height: 56px; border-radius: 12px; background: #161a25;
+      display: grid; place-items: center; overflow: hidden; border: 1px solid rgba(255,255,255,0.06);
+    }
+    .avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .name { font-weight: 600; letter-spacing: 0.2px; }
+
+    .action {
+      font-size: 12px; padding: 8px 12px; border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.14); background: rgba(30,34,48,0.65); user-select: none;
+    }
+    .action.add     { border-color: rgba(142,161,255,0.38); color: #dfe5ff; }
+    .action.manage  { border-color: rgba(86,196,132,0.38);  color: var(--good); }
+    .action.noperms { border-color: rgba(255,255,255,0.14); color: var(--muted); }
+
+    .empty {
+      padding: 16px; border: 1px dashed rgba(255,255,255,0.16); border-radius: 12px;
+      color: var(--muted); font-size: 14px; margin-top: 16px; text-align: center; width: 100%;
+    }
+
+    .top-actions { display: flex; gap: 10px; align-items: center; margin: 6px 0 18px; justify-content:center; width:100%; }
+    .warnbox {
+      border:1px solid rgba(255,196,86,0.45); background: rgba(255,196,86,0.12); color: var(--warn);
+      padding:12px 14px; border-radius:12px; margin-bottom:16px; font-size:14px; word-break: break-all; width:100%; max-width: 820px;
+      text-align: left;
+    }
+    code.inline { padding:2px 6px; border-radius:6px; border:1px solid rgba(255,255,255,0.14); background: rgba(255,255,255,0.06); }
+  </style>
+</head>
+<body>
+  <script type="module" src="/header/header.js"></script>
+  <div class="wrap">
+    <div id="site-header"></div>
+
+    <main class="page">
+      <h1>Select a server</h1>
+      <div class="sub">Choose a server. If the bot isn’t in a server yet, clicking it will take you to Discord’s add flow for that server.</div>
+
+      <div id="signinNotice" class="notice" style="display:none">
+        <div class="left">
+          <div class="title">Sign in to Discord</div>
+          <div class="muted">We’ll fetch your servers so you can pick where to add Kadie Bot.</div>
+        </div>
+        <div class="right"><button id="signinBtn" class="btn">Sign in</button></div>
+      </div>
+
+      <div id="redirectHelp" class="warnbox" style="display:none">
+        Add this exact Redirect to your Discord app’s <b>OAuth2 → Redirects</b> list:<br/>
+        <code id="redirectUriText" class="inline"></code><br/><br/>
+        Current page origin: <code class="inline" id="currentOrigin"></code>
+      </div>
+
+      <div class="top-actions">
+        <button class="btn" id="refreshBtn">Refresh</button>
+        <button class="btn" id="backKadie">Back to Kadie</button>
+        <button class="btn" id="signOutBtn" style="display:none">Sign out</button>
+      </div>
+
+      <div id="servers" class="grid" aria-live="polite"></div>
+      <div id="empty" class="empty" style="display:none"></div>
+    </main>
+  </div>
+
+  <script>
+    // ====== CONFIG ======
+    const CLIENT_ID       = '1395827053928120341';
+    const BOT_ADD_SCOPE   = 'bot applications.commands';
+    const BOT_PERMS       = '0';
+    const USER_SCOPES     = 'identify guilds';
+    const AUTH_CB_PATH    = '/kadie-page/kadie-bot/auth-callback.html';
+    const SERVERS_PAGE    = '/kadie-page/kadie-bot/bot-servers.html';
+    const CONFIG_PAGE     = '/kadie-page/kadie-bot/bot-config.html';
+
+    // Canonicalize localhost variants
+    function canonicalOrigin() {
+      const { protocol, hostname, port } = window.location;
+      let host = hostname;
+      if (host === '0.0.0.0' || host === '127.0.0.1' || host === '[::]' || host === '[::1]' || host === '::1') host = 'localhost';
+      return `${protocol}//${host}${port ? ':'+port : ''}`;
+    }
+    const CANONICAL_ORIGIN = canonicalOrigin();
+    const REDIRECT_URI     = new URL(AUTH_CB_PATH, CANONICAL_ORIGIN).toString();
+    const RETURN_URI       = new URL(SERVERS_PAGE, CANONICAL_ORIGIN).toString(); // where Discord will send us after "Add"
+
+    // ====== NAV BUTTONS ======
+    document.getElementById('backKadie').addEventListener('click', () => { window.location.href = '/kadie-page/kadie.html'; });
+    document.getElementById('refreshBtn').addEventListener('click', () => { init(true); });
+    document.getElementById('signinBtn').addEventListener('click', openDiscordLoginPopup);
+    document.getElementById('signOutBtn').addEventListener('click', () => { clearAuth(); init(true); });
+
+    // ====== STORAGE HELPERS ======
+    function setJSON(k, v, session = false) { (session ? sessionStorage : localStorage).setItem(k, JSON.stringify(v)); }
+    function getJSON(keys) {
+      for (const k of keys) {
+        try { const raw = sessionStorage.getItem(k) || localStorage.getItem(k); if (!raw) continue;
+          const parsed = JSON.parse(raw); if (parsed && typeof parsed === 'object') return parsed; } catch {}
+      } return null;
+    }
+    function removeKeys(keys) { for (const k of keys) { sessionStorage.removeItem(k); localStorage.removeItem(k); } }
+
+    function getOAuth() {
+      const tok = getJSON(['discord.oauth']); if (!tok) return null;
+      if (tok.expires_at && Date.now() > tok.expires_at) { removeKeys(['discord.oauth','discord.user','discord.guilds']); return null; }
+      return tok;
+    }
+    function clearAuth() { removeKeys(['discord.oauth','discord.user','discord.guilds']); }
+
+    // ====== DISCORD API ======
+    async function fetchDiscord(path, token) {
+      const r = await fetch(`https://discord.com/api${path}`, { headers: { 'Authorization': `Bearer ${token}` } });
+      if (!r.ok) throw new Error(`Discord API ${path} ${r.status}`);
+      return r.json();
+    }
+    async function ensureUserAndGuilds(oauth) {
+      let user = getJSON(['discord.user']), guilds = getJSON(['discord.guilds','discordGuilds']);
+      const token = oauth?.access_token;
+      if (!user)   { user   = await fetchDiscord('/users/@me', token);        setJSON('discord.user', user, false); }
+      if (!guilds) { guilds = await fetchDiscord('/users/@me/guilds', token); setJSON('discord.guilds', guilds, false); }
+      return { user, guilds };
+    }
+
+    // ====== URL PARAMS HELPERS ======
+    function readParams() {
+      const u = new URL(window.location.href);
+      return { q: u.searchParams, h: new URLSearchParams(u.hash.startsWith('#') ? u.hash.slice(1) : u.hash) };
+    }
+    function clearParams() {
+      const u = new URL(window.location.href); u.search = ''; u.hash = '';
+      history.replaceState(null, '', u.toString());
+    }
+
+    // ====== PERMISSIONS & INVITE ======
+    const MANAGE_GUILD = 0x20; // Manage Server
+    function hasManageGuildPerm(g) {
+      const p = (typeof g.permissions === 'string') ? Number(g.permissions) : g.permissions;
+      return (p & MANAGE_GUILD) === MANAGE_GUILD || !!g.owner;
+    }
+    function iconUrl(g) { return g.icon ? `https://cdn.discordapp.com/icons/${g.id}/${g.icon}.png?size=128` : null; }
+
+    // IMPORTANT: include redirect_uri so Discord ALWAYS comes back here after "Authorize"
+    function inviteUrl(guildId) {
+      const base = 'https://discord.com/oauth2/authorize';
+      const params = new URLSearchParams({
+        client_id: CLIENT_ID,
+        scope: BOT_ADD_SCOPE,
+        permissions: BOT_PERMS,
+        guild_id: guildId,
+        disable_guild_select: 'true',
+        response_type: 'code',
+        redirect_uri: RETURN_URI // ALWAYS bounce back to servers page
+      });
+      return `${base}?${params.toString()}`;
+    }
+
+    // ====== RENDER ======
+    function renderGuild(g, installed, canAdd) {
+      const el = document.createElement('div');
+      el.className = 'card';
+      el.dataset.guildId = g.id;
+
+      const avatar = document.createElement('div'); avatar.className = 'avatar';
+      const imgUrl = iconUrl(g);
+      if (imgUrl) { const img = document.createElement('img'); img.alt=''; img.src=imgUrl; avatar.appendChild(img); }
+      else { const dot=document.createElement('div'); dot.style.width='20px'; dot.style.height='20px'; dot.style.borderRadius='6px'; dot.style.background='rgba(255,255,255,0.14)'; avatar.appendChild(dot); }
+
+      const name = document.createElement('div'); name.className = 'name'; name.textContent = g.name;
+
+      const action = document.createElement('div'); action.className = 'action';
+      if (installed) {
+        action.classList.add('manage'); action.textContent = 'Manage bot';
+        el.addEventListener('click', () => {
+          const u = new URL(CONFIG_PAGE, window.location.origin); u.searchParams.set('guild_id', g.id); window.location.href = u.toString();
+        });
+      } else if (canAdd) {
+        action.classList.add('add'); action.textContent = 'Add bot';
+        el.addEventListener('click', () => { window.location.href = inviteUrl(g.id); });
+      } else {
+        action.classList.add('noperms'); action.textContent = 'No perms'; el.dataset.disabled = 'true';
+      }
+
+      el.appendChild(avatar); el.appendChild(name); el.appendChild(action);
+      return el;
+    }
+
+    function render(sorted, botGuildIds, authed) {
+      const mount = document.getElementById('servers');
+      const empty = document.getElementById('empty');
+      const signinNotice = document.getElementById('signinNotice');
+      const signOutBtn = document.getElementById('signOutBtn');
+      const redirectHelp = document.getElementById('redirectHelp');
+
+      signinNotice.style.display = authed ? 'none' : 'flex';
+      signOutBtn.style.display = authed ? 'inline-block' : 'none';
+      redirectHelp.style.display = authed ? 'none' : 'block';
+      document.getElementById('redirectUriText').textContent = REDIRECT_URI;
+      document.getElementById('currentOrigin').textContent = window.location.origin;
+
+      mount.innerHTML = '';
+      empty.style.display = 'none';
+
+      if (!authed) {
+        empty.textContent = 'Sign in to load your servers.';
+        empty.style.display = 'block';
+        return;
+      }
+
+      if (!sorted.length) {
+        empty.textContent = 'No servers available for this account yet.';
+        empty.style.display = 'block';
+        return;
+      }
+
+      for (const g of sorted) {
+        const installed = Array.isArray(botGuildIds) ? botGuildIds.includes(g.id) : false;
+        const canAdd = hasManageGuildPerm(g);
+        mount.appendChild(renderGuild(g, installed, canAdd));
+      }
+    }
+
+    // ====== LOGIN POPUP ======
+    let popupRef = null, popupTriedAuto = false;
+    function discordAuthUrl() {
+      const state = Math.random().toString(36).slice(2);
+      sessionStorage.setItem('discord.oauth.state', state);
+      const params = new URLSearchParams({
+        client_id: CLIENT_ID, redirect_uri: REDIRECT_URI,
+        response_type: 'token', scope: USER_SCOPES, prompt: 'consent', state
+      });
+      return `https://discord.com/oauth2/authorize?${params.toString()}`;
+    }
+    function centerSpecs(w=520, h=720) {
+      const y = Math.max(0, (window.outerHeight - h) / 2 + (window.screenY || window.screenTop || 0));
+      const x = Math.max(0, (window.outerWidth  - w) / 2 + (window.screenX || window.screenLeft || 0));
+      return `popup=yes,width=${w},height=${h},left=${x},top=${y}`;
+    }
+    function openDiscordLoginPopup() {
+      const url = discordAuthUrl();
+      popupRef = window.open(url, 'kadieDiscordLogin', centerSpecs());
+      if (!popupRef || popupRef.closed) window.location.href = url; // fallback same tab
+    }
+    window.addEventListener('message', async (ev) => {
+      const accept = new Set([window.location.origin, CANONICAL_ORIGIN]);
+      if (!accept.has(ev.origin)) return;
+      if (!ev.data || ev.data.type !== 'discord-auth') return;
+
+      const expected = sessionStorage.getItem('discord.oauth.state');
+      if (expected && ev.data.state && ev.data.state !== expected) return;
+
+      if (ev.data.ok && ev.data.token) {
+        const ttlMs = (ev.data.expires_in || 3600) * 1000;
+        const payload = {
+          access_token: ev.data.token, token_type: 'Bearer',
+          scope: ev.data.scope || USER_SCOPES, expires_at: Date.now() + ttlMs
+        };
+        localStorage.setItem('discord.oauth', JSON.stringify(payload));
+        try { await ensureUserAndGuilds(payload); } catch(e){ console.error(e); }
+        init(true);
+      }
+    });
+
+    // ====== INIT ======
+    async function init(forceAutoPopup = false) {
+      // 1) If we just came back from the "Add bot" flow, Discord will give us ?code=...&guild_id=...
+      const { q, h } = readParams();
+      const newGuild = q.get('guild_id') || h.get('guild_id'); // accept either
+      if (newGuild) {
+        try {
+          const ids = getJSON(['discord.botGuildIds','discordBotGuildIds']) || [];
+          if (!ids.includes(newGuild)) {
+            ids.push(newGuild);
+            localStorage.setItem('discord.botGuildIds', JSON.stringify(ids));
+          }
+        } catch {}
+        clearParams(); // clean URL
+      }
+
+      // 2) Load user+guilds if authed
+      const oauth = getOAuth();
+      let guilds = getJSON(['discord.guilds','discordGuilds']);
+      if (oauth) {
+        try { const data = await ensureUserAndGuilds(oauth); guilds = data.guilds; }
+        catch(e){ console.error(e); clearAuth(); }
+      }
+      const botGuildIds = getJSON(['discord.botGuildIds','discordBotGuildIds']) || [];
+      const authed = !!getOAuth();
+
+      // 3) Sort: installed → can add → no perms
+      const installedSet = new Set(botGuildIds);
+      const arr = Array.isArray(guilds) ? guilds.slice() : [];
+      const installed = arr.filter(g => installedSet.has(g.id));
+      const canAdd    = arr.filter(g => !installedSet.has(g.id) && hasManageGuildPerm(g));
+      const noPerms   = arr.filter(g => !installedSet.has(g.id) && !hasManageGuildPerm(g));
+      const sorted    = [...installed, ...canAdd, ...noPerms];
+
+      render(sorted, botGuildIds, authed);
+
+      if (!authed && (forceAutoPopup || !popupTriedAuto)) { popupTriedAuto = true; openDiscordLoginPopup(); }
+    }
+
+    console.info('Discord redirect URI (allowlist this EXACTLY):', REDIRECT_URI);
+    console.info('Add-bot return URI:', RETURN_URI);
+
+    init();
+  </script>
+</body>
+</html>
