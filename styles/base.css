@@ -1,0 +1,32 @@
+/* reset & tokens */
+html, body {
+  margin: 0; padding: 0;
+  width: 100%; height: 100%;
+  overflow: hidden;
+  background: #000;
+  color: #fff;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  user-select: none;
+  cursor: none; /* we render our own cursor */
+}
+
+/* global vars (edit here) */
+:root{
+  /* motion */
+  --ease: cubic-bezier(.22,.61,.36,1);
+  --return-dur: .80s;    /* drag ease-back */
+  --zoom-dur: 3.2s;      /* page-open/close zoom duration */
+
+  /* canvas background tiles (no longer used for image, but kept if needed) */
+  --tile: 50;
+
+  /* cell size (rectangular 16:9) */
+  --cell-w: 300px;
+  --cell-h: calc(var(--cell-w) * 9 / 16);
+  --cell-radius: 0px;
+
+  /* page intro effects (Router sets these during open/close) */
+  --edge-size: 0%;
+  --content-blur: 0px;
+  --content-brightness: 1;
+}

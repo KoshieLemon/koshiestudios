@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Kadie — Internet Void</title>
+  <base href="/" />
+  <link rel="stylesheet" href="/kadie-page/css/kadie.css" />
+
+  <style>
+    /* Keep your current layout; only ensure the vignette anchor exists */
+    .scene{ position: relative; isolation:isolate; width:100vw; min-height:100svh; }
+    /* Strong vignette bound to the scene (won’t affect layout/shapes) */
+    :root{ --kadie-vignette-start:46%; --kadie-vignette-mid:66%; --kadie-vignette-midop:.72; --kadie-vignette-edge:.98; }
+    .scene::after{
+      content:""; position:absolute; inset:0; pointer-events:none; z-index:2147483646;
+      background: radial-gradient(120% 100% at 50% 50%,
+        rgba(0,0,0,0) var(--kadie-vignette-start),
+        rgba(0,0,0,var(--kadie-vignette-midop)) var(--kadie-vignette-mid),
+        rgba(0,0,0,var(--kadie-vignette-edge)) 100%);
+    }
+    @supports (mix-blend-mode:multiply){ .scene::after{ mix-blend-mode:multiply; } }
+
+    /* Bottom-centered portal host (kept from your last working version) */
+    .kadie-portal-root{
+      position: fixed; left:0; right:0;
+      bottom: clamp(24px, 8vh, 72px);
+      display:flex; justify-content:center;
+      z-index:2147483647; pointer-events:none;
+    }
+    .kadie-portal-root > *{ pointer-events:auto; }
+
+    /* Header */
+    .kadie-page-header{
+      position:absolute; top:clamp(12px,4vh,32px); left:50%; transform:translateX(-50%);
+      width:min(1200px,92vw); text-align:center; z-index:9000; pointer-events:none;
+      color:#e9ecff; text-shadow:0 2px 14px rgba(0,0,0,.55);
+    }
+    .kadie-page-header h1{ margin:0; font-size:clamp(28px,4.5vw,56px); font-weight:700; }
+    .kadie-page-header p{ margin:.25em 0 0; font-size:clamp(13px,1.6vw,18px); opacity:.9; font-weight:500; }
+
+    /* Let messages/lines/fx reach the right edge if your CSS capped them */
+    .scene .line-layer, .scene .fx-layer { right: 0; }
+    .scene .message-layer{ overflow: visible; } /* allow loose cards off-screen */
+  </style>
+</head>
+
+<body>
+  <script type="module" src="/header/header.js"></script>
+
+  <!-- Minimal SVG filter kept for Discord cards -->
+  <svg width="0" height="0" style="position:absolute">
+    <filter id="cardWarp">
+      <feImage href="data:image/svg+xml;utf8,
+        <svg xmlns='http://www.w3.org/2000/svg' width='1024' height='1024'>
+          <defs>
+            <radialGradient id='g' cx='50%' cy='50%' r='50%'>
+              <stop offset='0%' stop-color='#88aaff'/>
+              <stop offset='100%' stop-color='#000000'/>
+            </radialGradient>
+          </defs>
+          <rect width='1024' height='1024' fill='url(%23g)'/>
+        </svg>"/>
+      <feDisplacementMap in2="SourceGraphic" scale="0" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+  </svg>
+
+  <main class="void-stage">
+    <section class="scene" id="scene" aria-hidden="true">
+
+      <!-- Page header -->
+      <header class="kadie-page-header" aria-hidden="false">
+        <h1>Kadie AI</h1>
+        <p>See Everything. Know Everything</p>
+      </header>
+
+      <!-- Kadie (your unchanged stack) -->
+      <div class="kadie-wrap" id="kadieWrap" data-depth="0.20">
+        <div class="hair-group hair1" aria-hidden="true">
+          <img class="kadie-hair hair-01 base" id="kadieHair01" src="/kadie-page/page-assets/kadie_hair_01.png" alt="">
+        </div>
+        <div class="hair-group hair2" aria-hidden="true">
+          <img class="kadie-hair hair-02 base" id="kadieHair02" src="/kadie-page/page-assets/kadie_hair_02.png" alt="">
+        </div>
+        <img class="kadie" id="kadie" src="/kadie-page/page-assets/kadie_front.png" alt="Kadie">
+        <img class="kadie-eye eye-left"  id="kadieEyeLeft"  src="/kadie-page/page-assets/kadie_eye_left.png"  alt="">
+        <img class="kadie-eye eye-right" id="kadieEyeRight" src="/kadie-page/page-assets/kadie_eye_right.png" alt="">
+      </div>
+
+      <!-- UNDER-KADIE message bands -->
+      <div class="message-layer back"  id="messageLayerBack"  data-depth="0.06" data-blur="2.6"></div>
+      <div class="fx-layer fx-backmid"  data-depth="0.08">
+        <video class="fxv screen"  src="/kadie-page/page-assets/glitch_back.mp4" autoplay muted loop playsinline></video>
+        <video class="fxv lighten" src="/kadie-page/page-assets/static_back.mp4" autoplay muted loop playsinline></video>
+        <div class="fx-noise"></div>
+      </div>
+
+      <div class="message-layer mid"   id="messageLayerMid"   data-depth="0.10" data-blur="1.6"></div>
+      <div class="fx-layer fx-midfront" data-depth="0.12">
+        <video class="fxv screen"  src="/kadie-page/page-assets/glitch_mid.mp4" autoplay muted loop playsinline></video>
+        <video class="fxv lighten" src="/kadie-page/page-assets/static_mid.mp4"  autoplay muted loop playsinline></video>
+        <div class="fx-noise"></div>
+      </div>
+
+      <div class="message-layer front" id="messageLayerFront" data-depth="0.15" data-blur="0.8"></div>
+
+      <!-- Flow lines for the 3 under bands -->
+      <div class="line-layer back"  id="lineLayerBack"  data-depth="0.06" data-blur="2.6"></div>
+      <div class="line-layer mid"   id="lineLayerMid"   data-depth="0.10" data-blur="1.6"></div>
+      <div class="line-layer front" id="lineLayerFront" data-depth="0.15" data-blur="0.8"></div>
+
+      <!-- OVER band (above Kadie but not covering her rect) -->
+      <div class="message-layer over" id="messageLayerOver" data-depth="0.18" data-blur="0.4"></div>
+      <div class="line-layer over"    id="lineLayerOver"   data-depth="0.18" data-blur="0.4"></div>
+
+      <!-- Global overlays -->
+      <div class="scanlines"></div>
+      <div class="vignette-soft" id="vignetteSoft"></div>
+    </section>
+  </main>
+
+  <!-- Bottom-center portal host -->
+  <div id="kadie-portal-root" class="kadie-portal-root"></div>
+
+  <!-- Apply saved calibration on boot -->
+  <script type="module" src="/kadie-page/js/applyCalibration.js"></script>
+
+  <script>
+    (async () => {
+      const scene = document.getElementById('scene');
+
+      try { await import('/kadie-page/js/parallax.js'); } catch (e) {
+        console.warn('[kadie] parallax load failed', e);
+      }
+
+      let mod = null;
+      try { mod = await import('/kadie-page/js/messages.js'); } catch {}
+      if (!mod) {
+        try { mod = await import('/kadie-page/js/messages/index.js'); } catch (e) {
+          console.warn('[kadie] messages load failed', e);
+        }
+      }
+      if (mod && typeof mod.mountMessageSystem === 'function') {
+        try { mod.mountMessageSystem(scene); } catch (e) {
+          console.warn('[kadie] mountMessageSystem error', e);
+        }
+      } else {
+        console.warn('[kadie] mountMessageSystem not found');
+      }
+
+      // Reveal FX videos when ready
+      const vids = Array.from(document.querySelectorAll('.fxv'));
+      const show = v => v.classList.add('ready');
+      for (const v of vids) {
+        v.addEventListener('canplay', show, { once:true });
+        v.addEventListener('loadeddata', show, { once:true });
+        v.addEventListener('loadedmetadata', show, { once:true });
+        if (v.readyState >= 2) show(v);
+      }
+      setTimeout(()=>{ vids.forEach(v => v.classList.add('ready-fallback')); }, 1500);
+    })();
+  </script>
+
+  <!-- NEW: Stretch BOTH SIDES by remapping spawn X (no shape changes) -->
+  <script type="module" src="/kadie-page/js/patches/messageSpawnRemap.js"></script>
+
+  <!-- Optional: your existing calibrator -->
+  <script type="module" src="/kadie-page/js/eyeCalibrator.js"></script>
+
+  <!-- Debug harness + Add-to-Discord portal scripts -->
+  <script type="module" src="/kadie-page/js/addToDiscordPortal.js"></script>
+  <script type="module" src="/kadie-page/js/debugMessages.js"></script>
+
+</body>
+</html>

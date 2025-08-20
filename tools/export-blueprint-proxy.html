@@ -1,0 +1,63 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Kadie Blueprint Export (Proxy)</title>
+<style>
+:root{color-scheme:dark}body{margin:0;font:14px/1.45 ui-monospace,Menlo,Consolas,monospace;background:#0f1320;color:#e7eaf6}
+header{padding:14px;border-bottom:1px solid #2a2f45;display:grid;grid-template-columns:auto 1fr;gap:14px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}label{display:grid;gap:6px}
+input,button{background:#131827;color:#e7eaf6;border:1px solid #2a2f45;border-radius:8px;padding:8px 10px}
+input{width:300px}button{cursor:pointer}button:hover{border-color:#8ea1ff5a}
+main{padding:16px;display:grid;grid-template-columns:1fr 360px;gap:16px}
+pre{margin:0;padding:12px;background:#0c101d;border:1px solid #2a2f45;white-space:pre;overflow:auto;max-height:70vh}
+.panel{border:1px solid #2a2f45;border-radius:10px;overflow:hidden}.panel h3{margin:0;padding:10px 12px;font-size:13px;background:#0c101d;border-bottom:1px solid #2a2f45}
+.panel .body{padding:10px 12px;display:grid;gap:8px}ul{margin:0;padding-left:18px;max-height:48vh;overflow:auto}
+.muted{color:#9aa4c7;font-size:12px}
+</style></head><body>
+<header>
+  <div class="row">
+    <label>Proxy URL <input id="base" value="http://localhost:8787"/></label>
+    <label>Guild ID <input id="guild" placeholder="1396288669857615872"/></label>
+    <label>System ID <input id="system" placeholder="Autopurge"/></label>
+    <div class="row"><button id="load">Load</button><button id="copy">Copy JSON</button><button id="download">Download JSON</button></div>
+  </div>
+  <div class="row" style="justify-content:flex-end"><div id="status" class="muted">Start proxy with service-account creds.</div></div>
+</header>
+<main>
+  <pre id="out">// not loaded</pre>
+  <div class="panel"><h3>Discover</h3><div class="body">
+    <div class="row"><button id="listLocal">List Local IDs</button><button id="listFs">List Firestore IDs</button></div>
+    <div><strong>LocalStorage</strong><ul id="loc"></ul></div>
+    <div><strong>Firestore via Proxy</strong><ul id="fs"></ul></div>
+  </div></div>
+</main>
+<script>
+(function(){
+  const $=s=>document.querySelector(s), out=$('#out');
+  const KIDX=g=>`kadie:bp:index:${g}`, KDOC=(g,s)=>`kadie:bp:${g}:${s}`;
+  const read=k=>{ try{const t=localStorage.getItem(k);return t?JSON.parse(t):null;}catch{return null;} };
+  const pretty=o=>{ try{return JSON.stringify(o,null,2);}catch{return String(o);} };
+  function setStatus(t){ $('#status').textContent=t; }
+  async function fetchJson(u){ const r=await fetch(u,{headers:{'Accept':'application/json'}}); if(!r.ok) throw new Error(`${r.status} ${await r.text()}`); return r.json(); }
+  function renderList(ul, ids){ ul.innerHTML=''; for(const id of ids){ const li=document.createElement('li'); const a=document.createElement('a'); a.href='#'; a.textContent=id; a.onclick=e=>{e.preventDefault(); $('#system').value=id;}; li.appendChild(a); ul.appendChild(li);} if(!ids.length){ const li=document.createElement('li'); li.textContent='(none)'; ul.appendChild(li);} }
+
+  $('#load').onclick = async ()=>{
+    const base=$('#base').value.trim(), g=$('#guild').value.trim(), s=$('#system').value.trim();
+    if(!base||!g||!s){ out.textContent='// provide base, guildId, systemId'; return; }
+    try{
+      setStatus('Loading…');
+      let doc=null;
+      try { doc=await fetchJson(`${base}/export?guildId=${encodeURIComponent(g)}&systemId=${encodeURIComponent(s)}`); } catch {}
+      if(!doc){ const local=read(KDOC(g,s)); if(!local){ out.textContent='// not found in Firestore or localStorage'; setStatus('Not found'); return;} doc=local; }
+      const ordered={}; if(doc.title!=null) ordered.title=doc.title; if(doc.systemId!=null) ordered.systemId=doc.systemId;
+      if(Array.isArray(doc.entries)) ordered.entries=doc.entries; if(doc.nodes&&typeof doc.nodes==='object') ordered.nodes=doc.nodes;
+      ordered.data={ edges:Array.isArray(doc?.data?.edges)?doc.data.edges:[] }; if(doc.ui) ordered.ui=doc.ui;
+      out.textContent=pretty(ordered); setStatus('Loaded');
+    }catch(e){ out.textContent='// error '+String(e); setStatus('Error'); }
+  };
+  $('#copy').onclick = async ()=>{ try{ await navigator.clipboard.writeText(out.textContent||''); }catch{} };
+  $('#download').onclick = async ()=>{ const blob=new Blob([out.textContent||'{}'],{type:'application/json'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='blueprint.json'; document.body.appendChild(a); a.click(); setTimeout(()=>{URL.revokeObjectURL(url); a.remove();},0); };
+  $('#listLocal').onclick = async ()=>{ const g=$('#guild').value.trim(); if(!g) return; const idx=(read(KIDX(g))||[]).map(it=>it.id); renderList($('#loc'), idx); };
+  $('#listFs').onclick = async ()=>{ const base=$('#base').value.trim(), g=$('#guild').value.trim(); if(!base||!g) return; try{ const r=await fetchJson(`${base}/list?guildId=${encodeURIComponent(g)}`); renderList($('#fs'), r.systems||[]);}catch{ renderList($('#fs'), []);} };
+})();
+</script>
+</body></html>

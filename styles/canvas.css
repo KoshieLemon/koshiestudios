@@ -1,0 +1,62 @@
+/* ===== Canvas / World ===== */
+.viewport { position: relative; width: 100vw; height: 100vh; overflow: hidden; z-index: 1; }
+
+/* UNIVERSAL pan/scale vars drive BOTH background + grid (set via JS) */
+.camera {
+  position: absolute; inset: 0;
+  overflow: hidden; /* hide edges of internal layers */
+  --scale: 1;
+  --pan-x: 0px;
+  --pan-y: 0px;
+
+  /* solid background (no image) */
+  background: #0e100f;
+
+  transform-origin: var(--origin-x, 50%) var(--origin-y, 50%);
+  transition: transform var(--zoom-dur) var(--ease);
+}
+
+/* Big page-open zoom (separate from micro-press scale) */
+.camera.zoom { transform: scale(var(--s)); }
+
+/* Grid uses the SAME vars => perfect sync with background */
+.grid-wrapper {
+  position: absolute; top: 50%; left: 50%;
+  transform:
+    translate(-50%, -50%)
+    translate(var(--pan-x,0px), var(--pan-y,0px))
+    scale(var(--scale,1));
+  transition: transform var(--return-dur) var(--ease);
+  cursor: grab;
+}
+
+/* One-cell grid sized by tokens in base.css */
+.grid { display: grid; grid-template: var(--cell-h) / var(--cell-w); }
+
+/* ===== Procedural dot field layer =====
+   Center the layer on the camera and apply the same pan/scale.
+   Explicit transform-origin ensures consistent inverse math.
+*/
+.dot-layer {
+  position: absolute;
+  top: 50%; left: 50%;
+  width: 100%; height: 100%;
+  pointer-events: none;
+  z-index: 0;
+  transform-origin: 50% 50%;
+  transform:
+    translate(-50%, -50%)
+    translate(var(--pan-x,0px), var(--pan-y,0px))
+    scale(var(--scale,1));
+  will-change: transform;
+}
+
+/* Individual dots (DOM nodes, GPU-translated for perf) */
+.dot {
+  position: absolute;
+  width: 2px; height: 2px;            /* size can be tuned from JS */
+  background: rgba(255,255,255,.28);  /* subtle “star” */
+  border-radius: 50%;
+  will-change: transform;
+  box-shadow: 0 0 1px rgba(255,255,255,.25);
+}

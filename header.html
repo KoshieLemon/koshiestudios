@@ -1,0 +1,36 @@
+<!-- Injected into #site-header by header/header.js -->
+<div class="site-header">
+  <div class="header-backdrop"></div>
+
+  <a id="logo-btn" class="brand" href="#">
+    <img id="logo-img" class="brand-logo" src="site-assets/koshiestudios_white_x1000.png" alt="Koshie Studios" />
+    <span class="tagline">Koshie Studios</span>
+  </a>
+</div>
+
+<!-- Header-specific styles (kept local) -->
+<style>
+  #site-header { position: relative; z-index: 50; }
+  .site-header {
+    position: fixed; top: 0; left: 0; width: 100%; height: 82px;
+    display: flex; align-items: center; gap: 20px; padding: 0 24px;
+    box-sizing: border-box; z-index: 50; pointer-events: auto;
+  }
+  .site-header .header-backdrop {
+    position: fixed; inset: 0 0 auto 0;
+    /* SHORTER fade area */
+    height: 18vh;
+    /* Fade goes to #0f1110 */
+    background: linear-gradient(
+      to top,
+      rgba(0,0,0,0) 0%,
+      rgba(15,17,16,0.65) 45%,
+      #0f1110 100%
+    );
+    z-index: -1; pointer-events: none;
+  }
+
+  .brand { display: inline-flex; align-items: center; gap: 14px; color: #fff; text-decoration: none; }
+  .brand-logo { width: 160px; height: auto; display: block; }
+  .tagline { font-size: 14px; opacity: .9; white-space: nowrap; }
+</style>

@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Kadie Bot — Blueprint Editor</title>
+  <base href="/" />
+  <link rel="stylesheet" href="/styles/base.css" />
+  <link rel="stylesheet" href="/styles/header.css" />
+  <style>
+    :root{
+      --bg:#0b0e14; --card:rgba(18,20,28,0.72); --brd:rgba(255,255,255,0.12);
+      --muted:rgba(233,236,255,0.72); --text:#e9ecff; --acc:#8ea1ff; --good:#c3f1d9; --danger:#ffb4b4;
+      --wire:#8ea1ff; --wireSel:#b6c2ff;
+    }
+    html, body, main, .page { cursor:auto !important; }
+    html, body { height:100%; background:var(--bg); color:var(--text); }
+    body { margin:0; }
+    .wrap{ min-height:100svh; display:grid; grid-template-rows:auto 1fr; }
+    .page{ width:min(1200px,94vw); margin:120px auto 64px; display:grid; gap:12px; }
+
+    .serverCard{
+      display:grid; grid-template-columns:56px 1fr auto; align-items:center; gap:12px;
+      padding:12px 14px; border:1px solid var(--brd); border-radius:16px; background:var(--card);
+    }
+    .svIcon{ width:56px; height:56px; border-radius:12px; overflow:hidden; border:1px solid rgba(255,255,255,.08); display:grid; place-items:center; }
+    .svIcon img{ width:100%; height:100%; object-fit:cover; display:block; }
+    .svTitle{ display:flex; flex-direction:column; gap:4px; }
+    .svName{ font-weight:700; letter-spacing:.2px; }
+    .svId{ font-size:12px; color:var(--muted); }
+    .btn{ padding:9px 12px; border-radius:10px; border:1px solid var(--brd); background:rgba(26,30,44,.7); color:var(--text); cursor:pointer; }
+    .btn:hover{ border-color: rgba(142,161,255,0.35); }
+    .btn.danger{ border-color: rgba(255,120,120,0.4); color: var(--danger); }
+    .muted{ color:var(--muted); font-size:13px; }
+
+    .systemsBar{
+      display:block;
+      padding:0;
+      border:0;
+      background:transparent;
+    }
+
+    .editor{
+      display:grid;
+      grid-template-columns:300px 1fr;
+      gap:12px;
+      align-items:start;
+      min-height:60vh;
+    }
+    .editor > * { min-width:0; }
+    .sidebar, .canvas{
+      border:1px solid var(--brd); border-radius:16px; background:var(--card);
+    }
+    .sidebar{
+      align-self:start;
+      padding:10px;
+      display:flex;
+      flex-direction:column;
+      overflow:hidden;
+    }
+
+    #elements{
+      flex:1 1 auto;
+      overflow-y:auto;
+      overflow-x:hidden;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(142,161,255,0.35) transparent;
+      scrollbar-gutter: stable;
+    }
+    #elements::-webkit-scrollbar{ width:10px; }
+    #elements::-webkit-scrollbar-track{ background:transparent; }
+    #elements::-webkit-scrollbar-thumb{
+      background: rgba(142,161,255,0.35);
+      border-radius: 8px;
+      border: 2px solid transparent;
+      background-clip: content-box;
+    }
+    #elements::-webkit-scrollbar-thumb:hover{ background: rgba(142,161,255,0.5); }
+
+    .accordion{ display:flex; flex-direction:column; gap:8px; }
+    .acc-section{ border:1px solid var(--brd); border-radius:12px; overflow:hidden; background:rgba(255,255,255,0.02); }
+    .acc-header{
+      width:100%; display:flex; align-items:center; justify-content:space-between; gap:8px;
+      padding:10px 12px; background:rgba(255,255,255,0.03); border:0; color:var(--text); cursor:pointer;
+      font-weight:700; letter-spacing:.2px;
+    }
+    .acc-header .chev{ transition: transform .18s ease; opacity:.9; }
+    .acc-section[data-open="false"] .acc-header .chev{ transform:rotate(-90deg); }
+    .acc-body{ padding:10px; display:grid; grid-template-columns:1fr; gap:10px; }
+    .acc-empty{ color:var(--muted); font-size:12px; padding:8px; border:1px dashed var(--brd); border-radius:10px; }
+
+    .elPreview{ padding:8px; border:1px dashed rgba(255,255,255,.24); border-radius:12px; cursor:grab; user-select:none; background:rgba(255,255,255,0.01); }
+    .elPreview:active{ cursor:grabbing; }
+    .elTitle{ font-size:12px; color:var(--muted); margin-bottom:6px; }
+
+    .node{
+      position:absolute; min-width:180px; max-width:280px; padding:10px; background:#141827; border:1px solid rgba(255,255,255,.12);
+      box-shadow:0 8px 20px rgba(0,0,0,.35), inset 0 0 0 1px rgba(255,255,255,0.04); border-radius:12px; cursor:grab;
+      user-select:none;
+    }
+    .node .title{ font-weight:700; margin-bottom:6px; display:flex; align-items:center; justify-content:space-between; gap:8px; }
+    .node .ports{ display:flex; justify-content:space-between; gap:6px; }
+    .ioCol{ display:flex; flex-direction:column; gap:6px; }
+    .port{ font-size:11px; padding:4px 6px; border-radius:999px; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12); user-select:none; display:flex; align-items:center; gap:6px; }
+    .portDot{ width:10px; height:10px; border-radius:999px; background:#626b8a; border:1px solid rgba(255,255,255,.26); flex:0 0 auto; }
+    .port.in .portDot{ background:#7a628a; }
+    .port.out{ background:rgba(86,196,132,0.16); border-color:rgba(86,196,132,.38); color:var(--good); }
+    .port.out .portDot{ background:#58b28a; }
+    .port[data-port-index]{ cursor:crosshair; }
+    .node .body{ margin-top:8px; font-size:12px; color:var(--muted); }
+    /* Hide the left IO column when the node has no inputs (used by event-start nodes) */
+    .node .ioCol.ioIn:empty { display:none; }
+    .previewNode{ position:relative; left:0; top:0; cursor:inherit; box-shadow:none; }
+    .previewNode .title{ font-size:13px; }
+    .previewNode .port{ font-size:10px; padding:3px 6px; }
+    .previewNode .body{ display:none; }
+    .previewWrap{ transform: scale(.95); transform-origin: top left; }
+
+    .canvas{
+      position:relative; overflow:hidden; min-height:60vh;
+      background:
+        linear-gradient(90deg, rgba(255,255,255,.04) 1px, transparent 1px) 0 0/24px 24px,
+        linear-gradient(0deg,  rgba(255,255,255,.04) 1px, transparent 1px) 0 0/24px 24px,
+        rgba(18,20,28,0.56);
+    }
+    .vp{ position:absolute; inset:0; overflow:hidden; }
+    .content{ position:absolute; inset:0; transform-origin:0 0; }
+    svg.wires{ position:absolute; inset:0; pointer-events:none; overflow:visible; }
+    .nodes{ position:absolute; inset:0; }
+
+    .node.selected{ outline:2px solid var(--acc); }
+
+    .wire{ fill:none; stroke:var(--wire); stroke-width:2; pointer-events:stroke; }
+    .wire.selected{ stroke:var(--wireSel); stroke-width:3; filter:drop-shadow(0 0 4px rgba(142,161,255,.5)); }
+    .wire.hit{ stroke-width:10; stroke:transparent; pointer-events:stroke; }
+
+    .canvas.disabled { opacity:1; filter:none; position:relative; }
+    .canvas.disabled .content,
+    .canvas.disabled .node,
+    .canvas.disabled .wire { pointer-events:auto; }
+    .canvas.disabled::after{ content:""; display:none; }
+
+    .ctx{ position:absolute; z-index:9999; display:none; min-width:160px; background:#0f1320; border:1px solid var(--brd); border-radius:10px; box-shadow:0 10px 26px rgba(0,0,0,.35); }
+    .ctx.show{ display:block; }
+    .ctx button{ width:100%; text-align:left; background:transparent; color:var(--text); border:0; padding:8px 10px; cursor:pointer; }
+    .ctx button:hover{ background:rgba(255,255,255,.06); }
+    .ctx hr{ border:0; border-top:1px solid rgba(255,255,255,.1); margin:4px 0; }
+
+    .unsavedBar{
+      position:fixed; right:20px; bottom:20px; z-index:99999;
+      display:none; align-items:center; gap:10px;
+      padding:10px 12px; border-radius:12px; border:1px solid var(--brd);
+      background:rgba(18,20,28,.8); box-shadow:0 10px 26px rgba(0,0,0,.35), inset 0 0 0 1px rgba(255,255,255,0.04);
+    }
+    .unsavedBar.show{ display:flex; }
+    .unsavedBar .label{ font-size:13px; color:var(--muted); }
+
+    .port.pin-flow .portDot,
+    .pin-flow .portDot {
+      width:0; height:0; background:transparent !important; border:0 !important; border-radius:0 !important;
+      border-left:10px solid #fff; border-top:6px solid transparent; border-bottom:6px solid transparent;
+    }
+    .pin-data.t-string  .portDot { background:#ff4dff !important; }
+    .pin-data.t-float   .portDot { background:#2ecc71 !important; }
+    .pin-data.t-boolean .portDot,
+    .pin-data.t-bool    .portDot { background:#e74c3c !important; }
+    .pin-data.t-int     .portDot,
+    .pin-data.t-integer .portDot { background:#00cfe8 !important; }
+    .pin-data.t-any     .portDot { background:#6b7280 !important; }
+  </style>
+</head>
+<body>
+  <script type="module" src="/header/header.js"></script>
+
+  <div class="wrap">
+    <header id="site-header"></header>
+
+    <main class="page">
+      <section class="serverCard">
+        <div class="svIcon" id="svIcon"></div>
+        <div class="svTitle">
+          <div class="svName" id="svName"></div>
+          <div class="svId" id="svId"></div>
+        </div>
+        <button class="btn" id="backBtn">← Back</button>
+      </section>
+
+      <section class="systemsBar" id="systemsBar"></section>
+
+      <section class="editor" id="editor">
+        <aside class="sidebar" id="sidebar">
+          <div id="elements" class="accordion"></div>
+        </aside>
+
+        <div class="canvas" id="canvas">
+          <div class="ctx" id="ctxMenu">
+            <button data-action="delete">Delete</button>
+            <button data-action="duplicate">Duplicate</button>
+            <hr/>
+            <button data-action="reset-zoom">Reset View</button>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div class="unsavedBar" id="unsavedBar">
+    <span class="label">Unsaved changes</span>
+    <button class="btn" id="unsavedSave">Save</button>
+    <button class="btn" id="unsavedRevert">Revert</button>
+  </div>
+
+  <script>
+    window.KADIE_DEBUG = true;
+  </script>
+  <script type="module" src="/kadie-page/kadie-bot/bot-config/main.js"></script>
+</body>
+</html>

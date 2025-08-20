@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Kadie Bot — Discord Auth</title>
+  <base href="/" />
+  <style>
+    html, body { height:100%; margin:0; background:#0b0e14; color:#e9ecff;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji"; }
+    .wrap { min-height:100%; display:grid; place-items:center; }
+    .card { background: rgba(18,20,28,0.72); border:1px solid rgba(255,255,255,0.12);
+      border-radius:14px; padding:18px 20px; width:min(520px,92vw); text-align:center; }
+    .muted { color: rgba(233,236,255,0.72); font-size:14px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1 id="title" style="margin:0 0 8px">Signing you in…</h1>
+      <div id="desc" class="muted">You can close this window once the sign-in completes.</div>
+    </div>
+  </div>
+
+  <script>
+    const SERVERS_PAGE = '/kadie-page/kadie-bot/bot-servers.html';
+
+    function parseHash() {
+      const h = window.location.hash.startsWith('#') ? window.location.hash.slice(1) : '';
+      const params = new URLSearchParams(h);
+      const res = {};
+      for (const [k, v] of params.entries()) res[k] = v;
+      return res;
+    }
+
+    function saveToken({ access_token, expires_in, scope }) {
+      if (!access_token || !expires_in) return null;
+      const payload = {
+        access_token,
+        token_type: 'Bearer',
+        scope: scope || '',
+        expires_at: Date.now() + (parseInt(expires_in, 10) * 1000)
+      };
+      try { localStorage.setItem('discord.oauth', JSON.stringify(payload)); } catch {}
+      return payload;
+    }
+
+    (function main(){
+      const data = parseHash();
+      const token = data.access_token || null;
+      const expires_in = data.expires_in || null;
+      const scope = data.scope || '';
+      const state = data.state || null;
+
+      // Persist token locally (works for both popup and same-tab)
+      const payload = saveToken({ access_token: token, expires_in, scope });
+
+      const hasOpener = !!(window.opener && !window.opener.closed);
+
+      if (hasOpener) {
+        // Popup flow: notify opener and try to close THIS window.
+        try {
+          window.opener.postMessage(
+            { type:'discord-auth', ok: !!token, token, expires_in, scope, state },
+            '*' // dev convenience; opener validates origin
+          );
+        } catch (e) {}
+        // Update text for clarity, then close shortly (if browser allows).
+        document.getElementById('title').textContent = 'Signed in';
+        document.getElementById('desc').textContent = 'You can close this window now.';
+        setTimeout(() => { try { window.close(); } catch(_) {} }, 400);
+
+        // Safety net: if close is blocked, bounce back to servers page in this tab.
+        setTimeout(() => {
+          if (!window.closed) window.location.replace(SERVERS_PAGE + '#authed=1');
+        }, 1500);
+      } else {
+        // Same-tab fallback (popup blocked or user followed link):
+        // Go straight back to servers page; it will detect the token from localStorage.
+        document.getElementById('title').textContent = 'Signed in — returning…';
+        document.getElementById('desc').textContent = 'Taking you back to the servers list.';
+        const u = new URL(SERVERS_PAGE, window.location.origin);
+        u.hash = 'authed=1';
+        setTimeout(() => window.location.replace(u.toString()), 300);
+      }
+    })();
+  </script>
+</body>
+</html>
